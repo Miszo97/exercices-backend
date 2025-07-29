@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exercise Table</title>
+    <style>
+        .highlight {
+            background-color: green;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<h1>Exercise Table</h1>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Date</th>
+            {% for name in exercise_names %}
+            <th>{{ name }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            {% for value in row[1] %}
+            <td class="{% if value != '0' and value.strip() != '' %}highlight{% endif %}">{{ value }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

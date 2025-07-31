@@ -1,15 +1,7 @@
-import dataclasses
 from datetime import datetime, timedelta
 from typing import List
 
-
-@dataclasses.dataclass
-class Exercise:
-    date: datetime
-    name: str
-    reps: int | None = None
-    duration: int | None = None
-    unit: str | None = None
+from dtos import Exercise
 
 
 def fetch_exercises(db, day: datetime = None) -> List[Exercise]:

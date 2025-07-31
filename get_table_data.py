@@ -1,6 +1,7 @@
 from typing import List
 from datetime import datetime, timedelta
-from fetching_exercises import Exercise
+from dtos import Exercise
+
 
 def get_exercise_names_by_priority(exercises: List[Exercise], priority_map: dict):
     return sorted(

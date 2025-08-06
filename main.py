@@ -26,17 +26,23 @@ async def read_root(request: Request):
         {"request": request, "exercise_names": exercise_names, "rows": rows}
     )
 
+from pydantic import BaseModel
+
+class ExerciseInput(BaseModel):
+    name: str
+    reps: Optional[int] = None
+    duration: Optional[int] = None
+    unit: Optional[str] = None
+
 @app.post("/", response_class=HTMLResponse)
-async def add_exercise_post(
-    request: Request,
-    name: str = Form(...),
-    reps: Optional[int] = Form(None),
-    duration: Optional[int] = Form(None),
-    unit: Optional[str] = Form(None)
-):
-    if not name:
-        return JSONResponse(content={"error": "'name' field is required"}, status_code=status.HTTP_400_BAD_REQUEST)
-    result = add_exercise(name=name, reps=reps, duration=duration, unit=unit, db=db)
+async def add_exercise_post(data: ExerciseInput):
+    result = add_exercise(
+        name=data.name,
+        reps=data.reps,
+        duration=data.duration,
+        unit=data.unit,
+        db=db
+    )
     response_body = f"<html><body><h1>Exercise Added</h1><p>{result}</p></body></html>"
     return HTMLResponse(content=response_body, status_code=200)
 

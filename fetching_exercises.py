@@ -5,12 +5,16 @@ from dtos import Exercise
 
 
 def fetch_exercises(db, day: datetime = None) -> List[Exercise]:
-    exercises_ref = db.collection('exercises').order_by('date')
+    exercises_ref = db.collection("exercises").order_by("date")
 
     if day:
         start_of_day = datetime(day.year, day.month, day.day)
         end_of_day = start_of_day + timedelta(days=1)
-        docs = exercises_ref.where('date', '>=', start_of_day).where('date', '<', end_of_day).stream()
+        docs = (
+            exercises_ref.where("date", ">=", start_of_day)
+            .where("date", "<", end_of_day)
+            .stream()
+        )
     else:
         docs = exercises_ref.stream()
 
@@ -19,11 +23,11 @@ def fetch_exercises(db, day: datetime = None) -> List[Exercise]:
         data = doc.to_dict()
         print(f"Fetched data: {data}")  # Debugging line
         exercise = Exercise(
-            date=data.get('date'),
-            name=data.get('name'),
-            reps=data.get('reps'),
-            duration=data.get('duration'),
-            unit=data.get('unit')
+            date=data.get("date"),
+            name=data.get("name"),
+            reps=data.get("reps"),
+            duration=data.get("duration"),
+            unit=data.get("unit"),
         )
         exercises.append(exercise)
 

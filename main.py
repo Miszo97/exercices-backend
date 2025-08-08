@@ -2,10 +2,10 @@ import os
 from typing import Optional
 
 import firebase_admin
-from fastapi import FastAPI, Form, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from firebase_admin import credentials, firestore
+from pydantic import BaseModel
 
 from adding_exercise import add_exercise
 from fetching_exercises import fetch_exercises
@@ -17,16 +17,16 @@ db = firebase_admin.firestore.client()
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     result = fetch_exercises(db)
     exercise_names, rows = get_table_data(exercises=result)
     return templates.TemplateResponse(
         "exercise_table.html",
-        {"request": request, "exercise_names": exercise_names, "rows": rows}
+        {"request": request, "exercise_names": exercise_names, "rows": rows},
     )
 
-from pydantic import BaseModel
 
 class ExerciseInput(BaseModel):
     name: str
@@ -34,19 +34,18 @@ class ExerciseInput(BaseModel):
     duration: Optional[int] = None
     unit: Optional[str] = None
 
+
 @app.post("/", response_class=HTMLResponse)
 async def add_exercise_post(data: ExerciseInput):
     result = add_exercise(
-        name=data.name,
-        reps=data.reps,
-        duration=data.duration,
-        unit=data.unit,
-        db=db
+        name=data.name, reps=data.reps, duration=data.duration, unit=data.unit, db=db
     )
     response_body = f"<html><body><h1>Exercise Added</h1><p>{result}</p></body></html>"
     return HTMLResponse(content=response_body, status_code=200)
 
+
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)

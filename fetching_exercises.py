@@ -1,18 +1,18 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List
 
 from dtos import Exercise
 
 
-def fetch_exercises(db, day: datetime = None) -> List[Exercise]:
+def fetch_exercises(db, day: date = None) -> List[Exercise]:
     exercises_ref = db.collection("exercises").order_by("date")
 
     if day:
-        start_of_day = datetime(day.year, day.month, day.day)
-        end_of_day = start_of_day + timedelta(days=1)
+        # Filtruj tylko po dacie (ignorując czas)
         docs = (
-            exercises_ref.where("date", ">=", start_of_day)
-            .where("date", "<", end_of_day)
+            exercises_ref
+            .where("date", ">=", datetime.combine(day, datetime.min.time()))
+            .where("date", "<", datetime.combine(day + timedelta(days=1), datetime.min.time()))
             .stream()
         )
     else:
@@ -21,7 +21,6 @@ def fetch_exercises(db, day: datetime = None) -> List[Exercise]:
     exercises = []
     for doc in docs:
         data = doc.to_dict()
-        print(f"Fetched data: {data}")  # Debugging line
         exercise = Exercise(
             date=data.get("date"),
             name=data.get("name"),

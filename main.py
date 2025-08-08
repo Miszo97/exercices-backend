@@ -1,4 +1,5 @@
 import os
+from datetime import date, datetime
 from typing import Optional
 
 import firebase_admin
@@ -7,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from firebase_admin import firestore
 from pydantic import BaseModel
+from starlette.responses import JSONResponse
 
 from adding_exercise import add_exercise
 from fetching_exercises import fetch_exercises
@@ -43,6 +45,12 @@ async def add_exercise_post(data: ExerciseInput):
     )
     response_body = f"<html><body><h1>Exercise Added</h1><p>{result}</p></body></html>"
     return HTMLResponse(content=response_body, status_code=200)
+
+
+@app.get("/today")
+async def read_today_json():
+    result = fetch_exercises(db, day=datetime.now())
+    return JSONResponse(content=result)
 
 
 if __name__ == "__main__":

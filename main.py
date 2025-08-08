@@ -5,6 +5,7 @@ import firebase_admin
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from firebase_admin import firestore
 from pydantic import BaseModel
 
 from adding_exercise import add_exercise
@@ -12,7 +13,7 @@ from fetching_exercises import fetch_exercises
 from get_table_data import get_table_data
 
 firebase_admin.initialize_app()
-db = firebase_admin.firestore.client()
+db = firestore.client()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")

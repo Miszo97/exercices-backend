@@ -1,4 +1,5 @@
 import os
+from dataclasses import asdict
 from datetime import date, datetime
 from typing import Optional
 
@@ -50,7 +51,8 @@ async def add_exercise_post(data: ExerciseInput):
 @app.get("/today")
 async def read_today_json():
     result = fetch_exercises(db, day=datetime.now())
-    return JSONResponse(content=result)
+    exercises_dict = [asdict(ex) for ex in result]
+    return JSONResponse(content=exercises_dict)
 
 
 if __name__ == "__main__":

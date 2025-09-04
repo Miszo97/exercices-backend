@@ -22,7 +22,7 @@ def fetch_exercises(db, day: date = None) -> List[Exercise]:
     for doc in docs:
         data = doc.to_dict()
         exercise = Exercise(
-            date=str(data.get("date")),
+            date=data.get("date"),
             name=data.get("name"),
             reps=data.get("reps"),
             duration=data.get("duration"),

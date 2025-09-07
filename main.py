@@ -51,7 +51,7 @@ async def add_exercise_post(data: ExerciseInput):
 @app.get("/today")
 async def read_today_json():
     result = fetch_exercises(db, day=datetime.now())
-    exercises_dict = [asdict(ex) for ex in result]
+    exercises_dict = [{"name": ex.name, "reps": ex.reps, "duration": ex.duration} for ex in result]
     return JSONResponse(content=exercises_dict)
 
 

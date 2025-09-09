@@ -3,33 +3,16 @@ from typing import List
 
 from dtos import Exercise
 
-
-def get_exercise_names_by_priority(exercises: List[Exercise], priority_map: dict):
-    return sorted(
-        {exercise.name for exercise in exercises},
-        key=lambda name: priority_map.get(name, 0),
-        reverse=True,
-    )
+#ordered set
+import collections
+def ordered_set(iterable):
+    return list(collections.OrderedDict.fromkeys(iterable))
 
 
-priority_map = {
-    "abs one leg kick": 2,
-    "band exterior bottom": 9,
-    "band exterior top": 8,
-    "biceps curls": 1,
-    "both legs foam stabilization": 10,
-    "copenhagen adduction": 7,
-    "glutes one leg up": 6,
-    "plank": 6,
-    "plank both sides": 5,
-    "push ups": 1,
-}
 
 
 def get_table_data(exercises: List[Exercise]):
-    exercise_names = get_exercise_names_by_priority(
-        exercises=exercises, priority_map=priority_map
-    )
+    exercise_names = list(dict.fromkeys((exercise.name for exercise in exercises)))
 
     grouped_by_date = {}
     for exercise in exercises:

@@ -1,5 +1,5 @@
 import os
-from datetime import date, datetime
+from datetime import datetime
 from typing import Optional
 
 import firebase_admin
@@ -10,9 +10,9 @@ from firebase_admin import firestore
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from adding_exercise import add_exercise
-from fetching_exercises import fetch_exercises, sum_exercises
-from get_table_data import get_table_data
+from src.adding_exercise import add_exercise
+from src.fetching_exercises import fetch_exercises, sum_exercises
+from src.get_table_data import get_table_data
 
 firebase_admin.initialize_app()
 db = firestore.client()

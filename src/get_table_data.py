@@ -1,17 +1,18 @@
+#ordered set
+import collections
 from datetime import datetime, timedelta
 from typing import List
 
-from dtos import Exercise
+from src.dtos import ExerciseEntry
 
-#ordered set
-import collections
+
 def ordered_set(iterable):
     return list(collections.OrderedDict.fromkeys(iterable))
 
 
 
 
-def get_table_data(exercises: List[Exercise]):
+def get_table_data(exercises: List[ExerciseEntry]):
     exercise_names = list(dict.fromkeys((exercise.name for exercise in exercises)))
 
     grouped_by_date = {}

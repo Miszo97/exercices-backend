@@ -1,5 +1,4 @@
 import os
-from dataclasses import asdict
 from datetime import date, datetime
 from typing import Optional
 
@@ -12,7 +11,7 @@ from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
 from adding_exercise import add_exercise
-from fetching_exercises import fetch_exercises
+from fetching_exercises import fetch_exercises, sum_exercises
 from get_table_data import get_table_data
 
 firebase_admin.initialize_app()
@@ -51,6 +50,7 @@ async def add_exercise_post(data: ExerciseInput):
 @app.get("/today")
 async def read_today_json():
     result = fetch_exercises(db, day=datetime.now())
+    result = sum_exercises(result)
     exercises_dict = [{"name": ex.name, "reps": ex.reps, "duration": ex.duration} for ex in result]
     return JSONResponse(content=exercises_dict)
 

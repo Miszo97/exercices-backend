@@ -18,7 +18,7 @@ firebase_admin.initialize_app()
 db = firestore.client()
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="src/templates")
 
 
 @app.get("/", response_class=HTMLResponse)

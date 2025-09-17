@@ -10,9 +10,14 @@ def fetch_exercises(db, day: date = None) -> List[ExerciseEntry]:
     if day:
         # Filtruj tylko po dacie (ignorując czas)
         docs = (
-            exercises_ref
-            .where("date", ">=", datetime.combine(day, datetime.min.time()))
-            .where("date", "<", datetime.combine(day + timedelta(days=1), datetime.min.time()))
+            exercises_ref.where(
+                "date", ">=", datetime.combine(day, datetime.min.time())
+            )
+            .where(
+                "date",
+                "<",
+                datetime.combine(day + timedelta(days=1), datetime.min.time()),
+            )
             .stream()
         )
     else:

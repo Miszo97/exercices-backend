@@ -51,7 +51,14 @@ async def add_exercise_post(data: ExerciseInput):
 async def read_today_json():
     result = fetch_exercises(db, day=datetime.now())
     result = sum_exercises(result)
-    exercises_dict = [{"name": ex.name, "reps": ex.reps, "duration": ex.duration} for ex in result]
+    exercises_dict = [
+        {
+            "name": ex.name,
+            "reps": ex.reps if ex.reps != 0 else None,
+            "duration": ex.duration if ex.duration != 0 else None,
+        }
+        for ex in result
+    ]
     return JSONResponse(content=exercises_dict)
 
 

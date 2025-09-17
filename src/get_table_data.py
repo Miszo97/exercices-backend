@@ -1,4 +1,4 @@
-#ordered set
+# ordered set
 import collections
 from datetime import datetime, timedelta
 from typing import List
@@ -8,8 +8,6 @@ from src.dtos import ExerciseEntry
 
 def ordered_set(iterable):
     return list(collections.OrderedDict.fromkeys(iterable))
-
-
 
 
 def get_table_data(exercises: List[ExerciseEntry]):

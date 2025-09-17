@@ -10,6 +10,7 @@ class ExerciseEntry:
     duration: int | None = None
     unit: str | None = None
 
+
 @dataclasses.dataclass
 class ExerciseDay:
     date: date

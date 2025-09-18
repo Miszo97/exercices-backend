@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from firebase_admin import firestore
 from pydantic import BaseModel
+from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from src.adding_exercise import add_exercise

@@ -13,6 +13,7 @@ from starlette.responses import JSONResponse
 
 from src.adding_exercise import add_exercise
 from src.fetching_exercises import fetch_exercises, sum_exercises
+from src.dtos import ExerciseType, RepsExerciseDaySum, DurationExerciseDaySum
 from src.get_table_data import get_table_data
 
 firebase_admin.initialize_app()
@@ -59,14 +60,29 @@ async def add_exercise_post(data: ExerciseInput):
 async def read_today_json():
     result = fetch_exercises(db, day=datetime.now())
     result = sum_exercises(result)
-    exercises_dict = [
-        {
-            "name": ex.name,
-            "reps": ex.reps if ex.reps != 0 else None,
-            "duration": ex.duration if ex.duration != 0 else None,
-        }
-        for ex in result
-    ]
+    exercises_dict = []
+    for ex in result:
+        if isinstance(ex, RepsExerciseDaySum):
+            entry_type = ExerciseType.REPS.value
+            reps = ex.reps if ex.reps != 0 else None
+            duration = None
+        elif isinstance(ex, DurationExerciseDaySum):
+            entry_type = ExerciseType.DURATION.value
+            reps = None
+            duration = ex.duration if ex.duration != 0 else None
+        else:
+            # Fallback in case of unexpected type
+            entry_type = None
+            reps = getattr(ex, "reps", None)
+            duration = getattr(ex, "duration", None)
+        exercises_dict.append(
+            {
+                "name": ex.name,
+                "type": entry_type,
+                "reps": reps,
+                "duration": duration,
+            }
+        )
     return JSONResponse(content=exercises_dict)
 
 

@@ -11,9 +11,13 @@ def ordered_set(iterable):
 
 
 def get_table_data(exercises: List[ExerciseEntry]):
+    # Handle empty input early
+    if not exercises:
+        return [], []
+
     exercise_names = list(dict.fromkeys((exercise.name for exercise in exercises)))
 
-    grouped_by_date = {}
+    grouped_by_date: dict[str, dict[str, dict[str, object]]] = {}
     for exercise in exercises:
         date_str = exercise.date.strftime("%Y-%m-%d")
         grouped_by_date.setdefault(
@@ -23,6 +27,9 @@ def get_table_data(exercises: List[ExerciseEntry]):
         grouped_by_date[date_str][exercise.name]["reps"] += exercise.reps or 0
         grouped_by_date[date_str][exercise.name]["duration"] += exercise.duration or 0
         grouped_by_date[date_str][exercise.name]["unit"] = exercise.unit or ""
+
+    if not grouped_by_date:
+        return exercise_names, []
 
     first_date = min(datetime.strptime(date, "%Y-%m-%d") for date in grouped_by_date)
     today = datetime.now()
@@ -39,9 +46,7 @@ def get_table_data(exercises: List[ExerciseEntry]):
         [
             date,
             [
-                str(data[name]["reps"])
-                if data[name]["reps"]
-                else f"{data[name]['duration']} {data[name]['unit']}".strip()
+                str(data[name]["reps"]) if data[name]["reps"] else f"{data[name]['duration']} {data[name]['unit']}".strip()
                 for name in exercise_names
             ],
         ]

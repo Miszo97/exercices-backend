@@ -1,6 +1,5 @@
 from datetime import date, datetime, timedelta
 from typing import List
-
 from src.dtos import ExerciseDay, ExerciseEntry
 
 
@@ -39,7 +38,7 @@ def fetch_exercises(db, day: date = None) -> List[ExerciseEntry]:
 
 
 def sum_exercises(exercises: List[ExerciseEntry]) -> List[ExerciseDay]:
-    summed = {}
+    summed: dict[tuple[date, str], ExerciseDay] = {}
     for exercise in exercises:
         key = (exercise.date.date(), exercise.name)
         if key not in summed:
@@ -50,11 +49,11 @@ def sum_exercises(exercises: List[ExerciseEntry]) -> List[ExerciseDay]:
                 duration=0,
                 unit=exercise.unit,
             )
-        if exercise.reps:
+        if exercise.reps is not None:
             summed[key].reps += exercise.reps
-        if exercise.duration:
+        if exercise.duration is not None:
             summed[key].duration += exercise.duration
-        if exercise.unit:
+        if exercise.unit is not None:
             summed[key].unit = exercise.unit
 
     return list(summed.values())

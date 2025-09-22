@@ -9,7 +9,7 @@ class ExerciseType(Enum):
     DURATION = "duration"
 
 
-# The newer, more granular DTOs can remain for potential future use
+# Unified DTOs (legacy ExerciseEntry/ExerciseDay removed)
 @dataclass
 class ExerciseEntryAbstract:
     date: datetime

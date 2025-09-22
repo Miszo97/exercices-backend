@@ -1,9 +1,16 @@
 from datetime import date, datetime, timedelta
 from typing import List
-from src.dtos import ExerciseDay, ExerciseEntry
+from .dtos import (
+    RepsExerciseEntry,
+    DurationExerciseEntry,
+    RepsExerciseDaySum,
+    DurationExerciseDaySum,
+    ExerciseEntryAbstract,
+    ExerciseDaySumAbstract,
+)
 
 
-def fetch_exercises(db, day: date = None) -> List[ExerciseEntry]:
+def fetch_exercises(db, day: date = None) -> List[ExerciseEntryAbstract]:
     exercises_ref = db.collection("exercises").order_by("date")
 
     if day:
@@ -22,38 +29,61 @@ def fetch_exercises(db, day: date = None) -> List[ExerciseEntry]:
     else:
         docs = exercises_ref.stream()
 
-    exercises = []
+    exercises: List[ExerciseEntryAbstract] = []
     for doc in docs:
         data = doc.to_dict()
-        exercise = ExerciseEntry(
-            date=data.get("date"),
-            name=data.get("name"),
-            reps=data.get("reps"),
-            duration=data.get("duration"),
-            unit=data.get("unit"),
-        )
-        exercises.append(exercise)
+        name = data.get("name")
+        dt = data.get("date")
+        reps = data.get("reps")
+        duration = data.get("duration")
+        unit = data.get("unit")
+        if reps is not None:
+            exercises.append(
+                RepsExerciseEntry(date=dt, name=name, reps=reps)
+            )
+        elif duration is not None:
+            exercises.append(
+                DurationExerciseEntry(date=dt, name=name, duration=duration, unit=unit)
+            )
+        else:
+            # Skip malformed entries that have neither reps nor duration
+            continue
 
     return exercises
 
 
-def sum_exercises(exercises: List[ExerciseEntry]) -> List[ExerciseDay]:
-    summed: dict[tuple[date, str], ExerciseDay] = {}
-    for exercise in exercises:
-        key = (exercise.date.date(), exercise.name)
-        if key not in summed:
-            summed[key] = ExerciseDay(
-                date=exercise.date.date(),
-                name=exercise.name,
-                reps=0,
-                duration=0,
-                unit=exercise.unit,
-            )
-        if exercise.reps is not None:
-            summed[key].reps += exercise.reps
-        if exercise.duration is not None:
-            summed[key].duration += exercise.duration
-        if exercise.unit is not None:
-            summed[key].unit = exercise.unit
+def sum_exercises(exercises: List[ExerciseEntryAbstract]) -> List[ExerciseDaySumAbstract]:
+    """
+    Aggregates newer granular entries (RepsExerciseEntry/DurationExerciseEntry) and returns a list of
+    corresponding ExerciseDaySumAbstract instances, keeping reps and duration sums distinct per type.
+    """
+    summed: dict[tuple[date, str, type], ExerciseDaySumAbstract] = {}
+    order: list[tuple[date, str, type]] = []
 
-    return list(summed.values())
+    for exercise in exercises:
+        # Skip unknown types defensively
+        if not isinstance(exercise, (RepsExerciseEntry, DurationExerciseEntry)):
+            continue
+        key = (exercise.date.date(), exercise.name, type(exercise))
+        if key not in summed:
+            if isinstance(exercise, RepsExerciseEntry):
+                summed[key] = RepsExerciseDaySum(
+                    date=exercise.date.date(), name=exercise.name, reps=0
+                )
+            else:  # DurationExerciseEntry
+                summed[key] = DurationExerciseDaySum(
+                    date=exercise.date.date(),
+                    name=exercise.name,
+                    duration=0,
+                    unit=exercise.unit,
+                )
+            order.append(key)
+
+        if isinstance(exercise, RepsExerciseEntry):
+            summed[key].reps += exercise.reps
+        else:
+            summed[key].duration += exercise.duration
+            if exercise.unit is not None:
+                summed[key].unit = exercise.unit
+
+    return [summed[k] for k in order]

@@ -3,14 +3,14 @@ import collections
 from datetime import datetime, timedelta
 from typing import List
 
-from src.dtos import ExerciseEntry
+from src.dtos import ExerciseEntryAbstract, RepsExerciseEntry, DurationExerciseEntry
 
 
 def ordered_set(iterable):
     return list(collections.OrderedDict.fromkeys(iterable))
 
 
-def get_table_data(exercises: List[ExerciseEntry]):
+def get_table_data(exercises: List[ExerciseEntryAbstract]):
     # Handle empty input early
     if not exercises:
         return [], []
@@ -24,9 +24,11 @@ def get_table_data(exercises: List[ExerciseEntry]):
             date_str,
             {name: {"reps": 0, "duration": 0, "unit": ""} for name in exercise_names},
         )
-        grouped_by_date[date_str][exercise.name]["reps"] += exercise.reps or 0
-        grouped_by_date[date_str][exercise.name]["duration"] += exercise.duration or 0
-        grouped_by_date[date_str][exercise.name]["unit"] = exercise.unit or ""
+        if isinstance(exercise, RepsExerciseEntry):
+            grouped_by_date[date_str][exercise.name]["reps"] += exercise.reps
+        elif isinstance(exercise, DurationExerciseEntry):
+            grouped_by_date[date_str][exercise.name]["duration"] += exercise.duration
+            grouped_by_date[date_str][exercise.name]["unit"] = exercise.unit or ""
 
     if not grouped_by_date:
         return exercise_names, []

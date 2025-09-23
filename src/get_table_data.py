@@ -1,4 +1,3 @@
-# ordered set
 import collections
 from datetime import datetime, timedelta
 from typing import List
@@ -11,7 +10,6 @@ def ordered_set(iterable):
 
 
 def get_table_data(exercises: List[ExerciseEntryAbstract]):
-    # Handle empty input early
     if not exercises:
         return [], []
 
@@ -48,7 +46,9 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]):
         [
             date,
             [
-                str(data[name]["reps"]) if data[name]["reps"] else f"{data[name]['duration']} {data[name]['unit']}".strip()
+                str(data[name]["reps"])
+                if data[name]["reps"]
+                else f"{data[name]['duration']} {data[name]['unit']}".strip()
                 for name in exercise_names
             ],
         ]

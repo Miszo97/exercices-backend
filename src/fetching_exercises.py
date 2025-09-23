@@ -14,7 +14,6 @@ def fetch_exercises(db, day: date = None) -> List[ExerciseEntryAbstract]:
     exercises_ref = db.collection("exercises").order_by("date")
 
     if day:
-        # Filtruj tylko po dacie (ignorując czas)
         docs = (
             exercises_ref.where(
                 "date", ">=", datetime.combine(day, datetime.min.time())
@@ -38,30 +37,24 @@ def fetch_exercises(db, day: date = None) -> List[ExerciseEntryAbstract]:
         duration = data.get("duration")
         unit = data.get("unit")
         if reps is not None:
-            exercises.append(
-                RepsExerciseEntry(date=dt, name=name, reps=reps)
-            )
+            exercises.append(RepsExerciseEntry(date=dt, name=name, reps=reps))
         elif duration is not None:
             exercises.append(
                 DurationExerciseEntry(date=dt, name=name, duration=duration, unit=unit)
             )
         else:
-            # Skip malformed entries that have neither reps nor duration
             continue
 
     return exercises
 
 
-def sum_exercises(exercises: List[ExerciseEntryAbstract]) -> List[ExerciseDaySumAbstract]:
-    """
-    Aggregates newer granular entries (RepsExerciseEntry/DurationExerciseEntry) and returns a list of
-    corresponding ExerciseDaySumAbstract instances, keeping reps and duration sums distinct per type.
-    """
+def sum_exercises(
+    exercises: List[ExerciseEntryAbstract],
+) -> List[ExerciseDaySumAbstract]:
     summed: dict[tuple[date, str, type], ExerciseDaySumAbstract] = {}
     order: list[tuple[date, str, type]] = []
 
     for exercise in exercises:
-        # Skip unknown types defensively
         if not isinstance(exercise, (RepsExerciseEntry, DurationExerciseEntry)):
             continue
         key = (exercise.date.date(), exercise.name, type(exercise))
@@ -70,7 +63,7 @@ def sum_exercises(exercises: List[ExerciseEntryAbstract]) -> List[ExerciseDaySum
                 summed[key] = RepsExerciseDaySum(
                     date=exercise.date.date(), name=exercise.name, reps=0
                 )
-            else:  # DurationExerciseEntry
+            else:
                 summed[key] = DurationExerciseDaySum(
                     date=exercise.date.date(),
                     name=exercise.name,

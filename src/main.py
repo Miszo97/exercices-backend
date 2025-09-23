@@ -1,23 +1,28 @@
 import os
 from datetime import datetime
-from typing import Optional
 
 import firebase_admin
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from firebase_admin import firestore
-from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
-from src.adding_exercise import add_exercise
+from src.exercises_service import ExerciseService
 from src.fetching_exercises import fetch_exercises, sum_exercises
-from src.dtos import ExerciseType, RepsExerciseDaySum, DurationExerciseDaySum
+from src.dtos import (
+    ExerciseType,
+    RepsExerciseDaySum,
+    DurationExerciseDaySum,
+    RepsExerciseInput,
+    DurationExerciseInput,
+)
 from src.get_table_data import get_table_data
 
 firebase_admin.initialize_app()
 db = firestore.client()
+service = ExerciseService(db)
 
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
@@ -30,6 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     result = fetch_exercises(db)
@@ -40,20 +46,18 @@ async def read_root(request: Request):
     )
 
 
-class ExerciseInput(BaseModel):
-    name: str
-    reps: Optional[int] = None
-    duration: Optional[int] = None
-    unit: Optional[str] = None
+@app.post("/reps")
+async def add_reps_exercise_post(data: RepsExerciseInput):
+    result = service.add_reps_exercise(name=data.name, reps=data.reps)
+    return {"status": "ok", "data": result}
 
 
-@app.post("/", response_class=HTMLResponse)
-async def add_exercise_post(data: ExerciseInput):
-    result = add_exercise(
-        name=data.name, reps=data.reps, duration=data.duration, unit=data.unit, db=db
+@app.post("/duration")
+async def add_duration_exercise_post(data: DurationExerciseInput):
+    result = service.add_duration_exercise(
+        name=data.name, duration=data.duration, unit=data.unit
     )
-    response_body = f"<html><body><h1>Exercise Added</h1><p>{result}</p></body></html>"
-    return HTMLResponse(content=response_body, status_code=200)
+    return {"status": "ok", "data": result}
 
 
 @app.get("/today")
@@ -62,27 +66,26 @@ async def read_today_json():
     result = sum_exercises(result)
     exercises_dict = []
     for ex in result:
+        payload = {"name": ex.name}
+
         if isinstance(ex, RepsExerciseDaySum):
-            entry_type = ExerciseType.REPS.value
-            reps = ex.reps if ex.reps != 0 else None
-            duration = None
+            payload["type"] = ExerciseType.REPS.value
+            if getattr(ex, "reps", None):
+                payload["reps"] = ex.reps
         elif isinstance(ex, DurationExerciseDaySum):
-            entry_type = ExerciseType.DURATION.value
-            reps = None
-            duration = ex.duration if ex.duration != 0 else None
+            payload["type"] = ExerciseType.DURATION.value
+            if getattr(ex, "duration", None):
+                payload["duration"] = ex.duration
         else:
-            # Fallback in case of unexpected type
-            entry_type = None
-            reps = getattr(ex, "reps", None)
-            duration = getattr(ex, "duration", None)
-        exercises_dict.append(
-            {
-                "name": ex.name,
-                "type": entry_type,
-                "reps": reps,
-                "duration": duration,
-            }
-        )
+            payload["type"] = None
+            reps_val = getattr(ex, "reps", None)
+            duration_val = getattr(ex, "duration", None)
+            if reps_val:
+                payload["reps"] = reps_val
+            if duration_val:
+                payload["duration"] = duration_val
+
+        exercises_dict.append(payload)
     return JSONResponse(content=exercises_dict)
 
 

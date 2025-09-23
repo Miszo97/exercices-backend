@@ -2,6 +2,9 @@ from datetime import date, datetime
 from enum import Enum
 
 from dataclasses import dataclass
+from typing import Optional
+
+from pydantic import BaseModel
 
 
 class ExerciseType(Enum):
@@ -9,7 +12,6 @@ class ExerciseType(Enum):
     DURATION = "duration"
 
 
-# Unified DTOs (legacy ExerciseEntry/ExerciseDay removed)
 @dataclass
 class ExerciseEntryAbstract:
     date: datetime
@@ -43,3 +45,13 @@ class DurationExerciseDaySum(ExerciseDaySumAbstract):
     duration: int | None = None
     unit: str | None = None
 
+
+class RepsExerciseInput(BaseModel):
+    name: str
+    reps: int
+
+
+class DurationExerciseInput(BaseModel):
+    name: str
+    duration: int
+    unit: str

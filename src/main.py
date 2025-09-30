@@ -64,29 +64,7 @@ async def add_duration_exercise_post(data: DurationExerciseInput):
 async def read_today_json():
     result = fetch_exercises(db, day=datetime.now())
     result = sum_exercises(result)
-    exercises_dict = []
-    for ex in result:
-        payload = {"name": ex.name}
-
-        if isinstance(ex, RepsExerciseDaySum):
-            payload["type"] = ExerciseType.REPS.value
-            if getattr(ex, "reps", None):
-                payload["reps"] = ex.reps
-        elif isinstance(ex, DurationExerciseDaySum):
-            payload["type"] = ExerciseType.DURATION.value
-            if getattr(ex, "duration", None):
-                payload["duration"] = ex.duration
-        else:
-            payload["type"] = None
-            reps_val = getattr(ex, "reps", None)
-            duration_val = getattr(ex, "duration", None)
-            if reps_val:
-                payload["reps"] = reps_val
-            if duration_val:
-                payload["duration"] = duration_val
-
-        exercises_dict.append(payload)
-    return JSONResponse(content=exercises_dict)
+    return JSONResponse(content=result.model_dump())
 
 
 if __name__ == "__main__":

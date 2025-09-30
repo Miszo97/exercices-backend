@@ -1,6 +1,8 @@
+from dataclasses import asdict
 from datetime import date, datetime, timedelta
 from typing import List
 from .dtos import (
+    ExercisesDaySumOutput,
     RepsExerciseEntry,
     DurationExerciseEntry,
     RepsExerciseDaySum,
@@ -50,7 +52,7 @@ def fetch_exercises(db, day: date = None) -> List[ExerciseEntryAbstract]:
 
 def sum_exercises(
     exercises: List[ExerciseEntryAbstract],
-) -> List[ExerciseDaySumAbstract]:
+) -> ExercisesDaySumOutput:
     summed: dict[tuple[date, str, type], ExerciseDaySumAbstract] = {}
     order: list[tuple[date, str, type]] = []
 
@@ -79,4 +81,4 @@ def sum_exercises(
             if exercise.unit is not None:
                 summed[key].unit = exercise.unit
 
-    return [summed[k] for k in order]
+    return ExercisesDaySumOutput(exercises=[summed[k] for k in order])

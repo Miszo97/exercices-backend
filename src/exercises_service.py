@@ -1,23 +1,27 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from typing import List
 
+import firebase_admin
 import pytz
+from firebase_admin import firestore
+
+from dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
 
 
 class ExerciseService:
     """Service that handles exercise persistence; db is injected via __init__."""
 
-    def __init__(self, db):
+    def __init__(self):
+        firebase_admin.initialize_app()
+        db = firestore.client()
         self.db = db
 
-    def _now_warsaw(self):
+    @staticmethod
+    def _now_warsaw():
         cest = pytz.timezone("Europe/Warsaw")
         return datetime.now(cest)
 
     def add_reps_exercise(self, name, reps, unit=None):
-        """
-        Adds a repetitions-based exercise entry with an explicit type field.
-        Leaves add_exercise intact by independently writing the document.
-        """
         exercises_ref = self.db.collection("exercises")
         if name is None:
             raise Exception("name is required")
@@ -38,10 +42,6 @@ class ExerciseService:
         return data
 
     def add_duration_exercise(self, name, duration, unit="seconds"):
-        """
-        Adds a duration-based exercise entry with an explicit type field.
-        Leaves add_exercise intact by independently writing the document.
-        """
         exercises_ref = self.db.collection("exercises")
         if name is None:
             raise Exception("name is required")
@@ -60,3 +60,42 @@ class ExerciseService:
 
         exercises_ref.add(data)
         return data
+
+    def fetch_exercises(self, day: date = None) -> List[ExerciseEntryAbstract]:
+        exercises_ref = self.db.collection("exercises").order_by("date")
+
+        if day:
+            docs = (
+                exercises_ref.where(
+                    "date", ">=", datetime.combine(day, datetime.min.time())
+                )
+                .where(
+                    "date",
+                    "<",
+                    datetime.combine(day + timedelta(days=1), datetime.min.time()),
+                )
+                .stream()
+            )
+        else:
+            docs = exercises_ref.stream()
+
+        exercises: List[ExerciseEntryAbstract] = []
+        for doc in docs:
+            data = doc.to_dict()
+            name = data.get("name")
+            dt = data.get("date")
+            reps = data.get("reps")
+            duration = data.get("duration")
+            unit = data.get("unit")
+            if reps is not None:
+                exercises.append(RepsExerciseEntry(date=dt, name=name, reps=reps))
+            elif duration is not None:
+                exercises.append(
+                    DurationExerciseEntry(
+                        date=dt, name=name, duration=duration, unit=unit
+                    )
+                )
+            else:
+                continue
+
+        return exercises

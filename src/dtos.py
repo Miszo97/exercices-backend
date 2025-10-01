@@ -1,10 +1,8 @@
+from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
 
-from dataclasses import dataclass
-from typing import Optional
-
-from pydantic import BaseModel, field_serializer, model_serializer
+from pydantic import BaseModel, field_serializer
 
 
 class ExerciseType(Enum):

@@ -1,28 +1,18 @@
 import os
 from datetime import datetime
 
-import firebase_admin
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from firebase_admin import firestore
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+from src.dtos import DurationExerciseInput, RepsExerciseInput
 from src.exercises_service import ExerciseService
-from src.fetching_exercises import fetch_exercises, sum_exercises
-from src.dtos import (
-    ExerciseType,
-    RepsExerciseDaySum,
-    DurationExerciseDaySum,
-    RepsExerciseInput,
-    DurationExerciseInput,
-)
+from src.fetching_exercises import sum_exercises
 from src.get_table_data import get_table_data
 
-firebase_admin.initialize_app()
-db = firestore.client()
-service = ExerciseService(db)
+service = ExerciseService()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
@@ -38,7 +28,7 @@ app.add_middleware(
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    result = fetch_exercises(db)
+    result = service.fetch_exercises()
     exercise_names, rows = get_table_data(exercises=result)
     return templates.TemplateResponse(
         "exercise_table.html",
@@ -62,7 +52,7 @@ async def add_duration_exercise_post(data: DurationExerciseInput):
 
 @app.get("/today")
 async def read_today_json():
-    result = fetch_exercises(db, day=datetime.now())
+    result = service.fetch_exercises(day=datetime.now())
     result = sum_exercises(result)
     return JSONResponse(content=result.model_dump())
 

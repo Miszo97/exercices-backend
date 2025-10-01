@@ -1,10 +1,10 @@
 from datetime import datetime
 
 from src.dtos import (
-    RepsExerciseEntry,
+    DurationExerciseDaySum,
     DurationExerciseEntry,
     RepsExerciseDaySum,
-    DurationExerciseDaySum,
+    RepsExerciseEntry,
 )
 from src.fetching_exercises import sum_exercises
 

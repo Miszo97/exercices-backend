@@ -1,53 +1,15 @@
-from dataclasses import asdict
-from datetime import date, datetime, timedelta
+from datetime import date
 from typing import List
+
 from .dtos import (
-    ExercisesDaySumOutput,
-    RepsExerciseEntry,
-    DurationExerciseEntry,
-    RepsExerciseDaySum,
     DurationExerciseDaySum,
-    ExerciseEntryAbstract,
+    DurationExerciseEntry,
     ExerciseDaySumAbstract,
+    ExerciseEntryAbstract,
+    ExercisesDaySumOutput,
+    RepsExerciseDaySum,
+    RepsExerciseEntry,
 )
-
-
-def fetch_exercises(db, day: date = None) -> List[ExerciseEntryAbstract]:
-    exercises_ref = db.collection("exercises").order_by("date")
-
-    if day:
-        docs = (
-            exercises_ref.where(
-                "date", ">=", datetime.combine(day, datetime.min.time())
-            )
-            .where(
-                "date",
-                "<",
-                datetime.combine(day + timedelta(days=1), datetime.min.time()),
-            )
-            .stream()
-        )
-    else:
-        docs = exercises_ref.stream()
-
-    exercises: List[ExerciseEntryAbstract] = []
-    for doc in docs:
-        data = doc.to_dict()
-        name = data.get("name")
-        dt = data.get("date")
-        reps = data.get("reps")
-        duration = data.get("duration")
-        unit = data.get("unit")
-        if reps is not None:
-            exercises.append(RepsExerciseEntry(date=dt, name=name, reps=reps))
-        elif duration is not None:
-            exercises.append(
-                DurationExerciseEntry(date=dt, name=name, duration=duration, unit=unit)
-            )
-        else:
-            continue
-
-    return exercises
 
 
 def sum_exercises(

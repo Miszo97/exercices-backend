@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List
 
-from .dtos import (
+from src.dtos import (
     DurationExerciseDaySum,
     DurationExerciseEntry,
     ExerciseDaySumAbstract,

@@ -5,7 +5,7 @@ import firebase_admin
 import pytz
 from firebase_admin import firestore
 
-from dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
+from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
 
 
 class ExerciseService:

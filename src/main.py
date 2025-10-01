@@ -26,7 +26,7 @@ app.add_middleware(
 )
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/table", response_class=HTMLResponse)
 async def read_root(request: Request):
     result = service.fetch_exercises()
     exercise_names, rows = get_table_data(exercises=result)
@@ -53,6 +53,13 @@ async def add_duration_exercise_post(data: DurationExerciseInput):
 @app.get("/today")
 async def read_today_json():
     result = service.fetch_exercises(day=datetime.now())
+    result = sum_exercises(result)
+    return JSONResponse(content=result.model_dump())
+
+
+@app.get("/exercises")
+async def read_json():
+    result = service.fetch_exercises()
     result = sum_exercises(result)
     return JSONResponse(content=result.model_dump())
 

@@ -54,7 +54,7 @@ async def add_duration_exercise_post(data: DurationExerciseInput):
 async def read_today_json():
     result = service.fetch_exercises(day=datetime.now())
     result = sum_exercises(result)
-    return JSONResponse(content=result.model_dump())
+    return JSONResponse(content=result.model_dump()['exercises'])
 
 
 @app.get("/exercises")

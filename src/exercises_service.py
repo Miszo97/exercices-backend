@@ -3,7 +3,7 @@ from typing import List
 
 from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
 from exercises_sources.exercises_source import ExerciseSource
-from exercises_sources.firebase_exercises_source import FirebaseExerciseSource
+from exercises_sources.firebase.firebase_exercises_source import FirebaseExerciseSource
 from src.dtos import ExerciseEntryAbstract
 
 

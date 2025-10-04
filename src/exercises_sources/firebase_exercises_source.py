@@ -5,6 +5,7 @@ import firebase_admin
 from firebase_admin import firestore
 
 from dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
+from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
 from exercises_sources.exercises_source import ExerciseSource
 
 
@@ -16,47 +17,41 @@ class FirebaseExerciseSource(ExerciseSource):
         db = firestore.client()
         self.db = db
 
-    def add_reps_exercise(self, name, reps, unit=None):
+    def add_reps_exercise(self, request: AddRepsExercisesRequest):
         exercises_ref = self.db.collection("exercises")
-        if name is None:
-            raise Exception("name is required")
-        if reps is None:
-            raise Exception("reps is required")
 
         current_time = self._now_warsaw()
         data = {
             "date": current_time,
-            "name": name,
-            "reps": reps,
+            "name": request.name,
+            "reps": request.reps,
             "type": "reps",
         }
-        if unit is not None:
-            data["unit"] = unit
+        if request.unit is not None:
+            data["unit"] = request.unit
 
         exercises_ref.add(data)
         return data
 
-    def add_duration_exercise(self, name, duration, unit="seconds"):
+    def add_duration_exercise(self, request: AddDurationExercisesRequest):
         exercises_ref = self.db.collection("exercises")
-        if name is None:
-            raise Exception("name is required")
-        if duration is None:
-            raise Exception("duration is required")
 
         current_time = self._now_warsaw()
         data = {
             "date": current_time,
-            "name": name,
-            "duration": duration,
+            "name": request.name,
+            "duration": request.duration,
             "type": "duration",
         }
-        if unit is not None:
-            data["unit"] = unit
+        if request.unit is not None:
+            data["unit"] = request.unit
 
         exercises_ref.add(data)
         return data
 
-    def fetch_exercises(self, day: date = None) -> List[ExerciseEntryAbstract]:
+    def fetch_exercises(
+        self, day: date = None, limit=None, offset=None
+    ) -> List[ExerciseEntryAbstract]:
         exercises_ref = self.db.collection("exercises").order_by("date")
 
         if day:
@@ -92,5 +87,10 @@ class FirebaseExerciseSource(ExerciseSource):
                 )
             else:
                 continue
+
+        if offset is not None:
+            exercises = exercises[offset:]
+        if limit is not None:
+            exercises = exercises[:limit]
 
         return exercises

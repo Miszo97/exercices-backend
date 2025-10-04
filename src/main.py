@@ -1,18 +1,24 @@
 import os
 from datetime import datetime
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
 from src.dtos import DurationExerciseInput, RepsExerciseInput
 from src.exercises_service import ExerciseService
 from src.fetching_exercises import sum_exercises
 from src.get_table_data import get_table_data
 
 service = ExerciseService()
+
+
+def get_service():
+    return ExerciseService()
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
@@ -37,16 +43,22 @@ async def read_root(request: Request):
 
 
 @app.post("/reps")
-async def add_reps_exercise_post(data: RepsExerciseInput):
-    result = service.add_reps_exercise(name=data.name, reps=data.reps)
+async def add_reps_exercise_post(
+    data: RepsExerciseInput, service: ExerciseService = Depends(get_service)
+):
+    request = AddRepsExercisesRequest(name=data.name, reps=data.reps)
+    result = service.add_reps_exercise(request=request)
     return {"status": "ok", "data": result}
 
 
 @app.post("/duration")
-async def add_duration_exercise_post(data: DurationExerciseInput):
-    result = service.add_duration_exercise(
+async def add_duration_exercise_post(
+    data: DurationExerciseInput, service: ExerciseService = Depends(get_service)
+):
+    request = AddDurationExercisesRequest(
         name=data.name, duration=data.duration, unit=data.unit
     )
+    result = service.add_duration_exercise(request=request)
     return {"status": "ok", "data": result}
 
 
@@ -58,8 +70,12 @@ async def read_today_json():
 
 
 @app.get("/exercises")
-async def read_json():
-    result = service.fetch_exercises()
+async def read_json(
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    service: ExerciseService = Depends(get_service),
+):
+    result = service.fetch_exercises(limit=limit, offset=offset)
     result = sum_exercises(result)
     return JSONResponse(content=result.model_dump())
 

@@ -64,6 +64,15 @@ async def read_json():
     return JSONResponse(content=result.model_dump())
 
 
+def test_exercise_endpoint():
+    from fastapi.testclient import TestClient
+
+    client = TestClient(app)
+    response = client.get("/exercises")
+    assert response.status_code == 200
+    assert "exercises" in response.json()
+
+
 if __name__ == "__main__":
     import uvicorn
 

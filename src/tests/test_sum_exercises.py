@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dtos import (
+from src.dtos import (
     DurationExerciseDaySum,
     DurationExerciseEntry,
     RepsExerciseDaySum,

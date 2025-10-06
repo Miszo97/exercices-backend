@@ -1,10 +1,10 @@
 from datetime import date
 from typing import List
 
-from dtos import ExerciseEntryAbstract
-from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
-from exercises_sources.exercises_source import ExerciseSource
-from exercises_sources.firebase.firebase_exercises_source import FirebaseExerciseSource
+from src.dtos import ExerciseEntryAbstract
+from src.exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
+from src.exercises_sources.exercises_source import ExerciseSource
+from src.exercises_sources.firebase.firebase_exercises_source import FirebaseExerciseSource
 
 
 class ExerciseService:

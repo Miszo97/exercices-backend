@@ -2,7 +2,7 @@ import collections
 from datetime import datetime, timedelta
 from typing import List
 
-from dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
+from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
 
 
 def ordered_set(iterable):

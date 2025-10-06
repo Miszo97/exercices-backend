@@ -4,9 +4,9 @@ from typing import List
 import firebase_admin
 from firebase_admin import firestore
 
-from dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
-from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
-from exercises_sources.exercises_source import ExerciseSource
+from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
+from src.exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
+from src.exercises_sources.exercises_source import ExerciseSource
 
 
 class FirebaseExerciseSource(ExerciseSource):

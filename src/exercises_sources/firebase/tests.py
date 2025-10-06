@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from exercises_sources.firebase.firebase_exercises_source import (
+from src.exercises_sources.firebase.firebase_exercises_source import (
     FirebaseExerciseSource,
 )
 

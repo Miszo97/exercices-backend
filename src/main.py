@@ -7,11 +7,11 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
-from dtos import DurationExerciseInput, RepsExerciseInput
-from exercises_service import ExerciseService
-from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
-from fetching_exercises import sum_exercises
-from get_table_data import get_table_data
+from src.dtos import DurationExerciseInput, RepsExerciseInput
+from src.exercises_service import ExerciseService
+from src.exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
+from src.fetching_exercises import sum_exercises
+from src.get_table_data import get_table_data
 
 
 def get_service():

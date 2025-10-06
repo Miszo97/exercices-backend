@@ -2,8 +2,8 @@ import abc
 from datetime import date
 from typing import List
 
-from dtos import ExerciseEntryAbstract
-from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
+from src.dtos import ExerciseEntryAbstract
+from src.exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
 
 
 class ExerciseSource(abc.ABC):

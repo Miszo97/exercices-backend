@@ -50,7 +50,7 @@ class FirebaseExerciseSource(ExerciseSource):
         return data
 
     def fetch_exercises(
-        self, day: date = None, limit=None, offset=None
+        self, day: date = None, limit=None, offset=None, last_days: int = None
     ) -> List[ExerciseEntryAbstract]:
         exercises_ref = self.db.collection("exercises").order_by("date")
 
@@ -64,6 +64,14 @@ class FirebaseExerciseSource(ExerciseSource):
                     "<",
                     datetime.combine(day + timedelta(days=1), datetime.min.time()),
                 )
+                .stream()
+            )
+        elif last_days is not None:
+            now = datetime.now()
+            start_date = now - timedelta(days=last_days)
+            docs = (
+                exercises_ref.where("date", ">=", start_date)
+                .where("date", "<=", now)
                 .stream()
             )
         else:

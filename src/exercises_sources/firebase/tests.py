@@ -23,3 +23,10 @@ class TestFirebaseExerciseSource:
         assert isinstance(results, list)
         for entry in results:
             assert entry.date.date() == test_day
+
+    def test_fetch_exercises_for_last_5_days(self):
+        results = source.fetch_exercises(last_days=5)
+        assert isinstance(results, list)
+        cutoff_date = date.today() - timedelta(days=5)
+        for entry in results:
+            assert entry.date.date() >= cutoff_date

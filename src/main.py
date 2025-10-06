@@ -7,13 +7,11 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+from dtos import DurationExerciseInput, RepsExerciseInput
+from exercises_service import ExerciseService
 from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
-from src.dtos import DurationExerciseInput, RepsExerciseInput
-from src.exercises_service import ExerciseService
-from src.fetching_exercises import sum_exercises
-from src.get_table_data import get_table_data
-
-service = ExerciseService()
+from fetching_exercises import sum_exercises
+from get_table_data import get_table_data
 
 
 def get_service():
@@ -33,7 +31,10 @@ app.add_middleware(
 
 
 @app.get("/table", response_class=HTMLResponse)
-async def read_root(request: Request):
+async def read_root(
+    request: Request,
+    service: ExerciseService = Depends(get_service),
+):
     result = service.fetch_exercises()
     exercise_names, rows = get_table_data(exercises=result)
     return templates.TemplateResponse(
@@ -63,7 +64,9 @@ async def add_duration_exercise_post(
 
 
 @app.get("/today")
-async def read_today_json():
+async def read_today_json(
+    service: ExerciseService = Depends(get_service),
+):
     result = service.fetch_exercises(day=datetime.now())
     result = sum_exercises(result)
     return JSONResponse(content=result.model_dump()["exercises"])
@@ -71,11 +74,14 @@ async def read_today_json():
 
 @app.get("/exercises")
 async def read_json(
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(1000, ge=1, le=1000),
     offset: int = Query(0, ge=0),
+    last_days: int = Query(0, ge=0),
     service: ExerciseService = Depends(get_service),
 ):
-    result = service.fetch_exercises(limit=limit, offset=offset)
+    result = service.fetch_exercises(
+        limit=limit, offset=offset, last_days=last_days or None
+    )
     result = sum_exercises(result)
     return JSONResponse(content=result.model_dump())
 

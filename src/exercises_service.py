@@ -1,10 +1,10 @@
 from datetime import date
 from typing import List
 
+from dtos import ExerciseEntryAbstract
 from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
 from exercises_sources.exercises_source import ExerciseSource
 from exercises_sources.firebase.firebase_exercises_source import FirebaseExerciseSource
-from src.dtos import ExerciseEntryAbstract
 
 
 class ExerciseService:
@@ -21,6 +21,8 @@ class ExerciseService:
         return self.exercise_source.add_duration_exercise(request=request)
 
     def fetch_exercises(
-        self, day: date = None, limit: int = 10, offset: int = 0
+        self, day: date = None, limit: int = 10, offset: int = 0, last_days: int = None
     ) -> List[ExerciseEntryAbstract]:
-        return self.exercise_source.fetch_exercises(day=day, limit=limit, offset=offset)
+        return self.exercise_source.fetch_exercises(
+            day=day, limit=limit, offset=offset, last_days=last_days
+        )

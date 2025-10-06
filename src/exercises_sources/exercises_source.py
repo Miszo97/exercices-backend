@@ -17,6 +17,6 @@ class ExerciseSource(abc.ABC):
 
     @abc.abstractmethod
     def fetch_exercises(
-        self, day: date = None, limit=None, offset=None
+        self, day: date = None, limit=None, offset=None, last_days: int = None
     ) -> List[ExerciseEntryAbstract]:
         pass

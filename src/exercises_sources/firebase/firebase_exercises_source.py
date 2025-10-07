@@ -13,7 +13,10 @@ class FirebaseExerciseSource(ExerciseSource):
     """Concrete implementation of ExerciseSource using Firebase Firestore."""
 
     def __init__(self):
-        firebase_admin.initialize_app()
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+            firebase_admin.initialize_app()
         db = firestore.client()
         self.db = db
 

@@ -35,7 +35,7 @@ async def read_root(
     request: Request,
     service: ExerciseService = Depends(get_service),
 ):
-    result = service.fetch_exercises()
+    result = service.fetch_exercises(limit=10000)
     exercise_names, rows = get_table_data(exercises=result)
     return templates.TemplateResponse(
         "exercise_table.html",

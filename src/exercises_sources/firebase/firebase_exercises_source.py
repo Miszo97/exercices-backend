@@ -2,10 +2,14 @@ from datetime import date, datetime, timedelta
 from typing import List
 
 import firebase_admin
+import pytz
 from firebase_admin import firestore
 
 from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
-from src.exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
+from src.exercises_sources.dtos import (
+    AddDurationExercisesRequest,
+    AddRepsExercisesRequest,
+)
 from src.exercises_sources.exercises_source import ExerciseSource
 
 
@@ -20,6 +24,11 @@ class FirebaseExerciseSource(ExerciseSource):
         db = firestore.client()
         self.db = db
 
+    @staticmethod
+    def _now_warsaw():
+        cest = pytz.timezone("Europe/Warsaw")
+        return datetime.now(cest)
+
     def add_reps_exercise(self, request: AddRepsExercisesRequest):
         exercises_ref = self.db.collection("exercises")
 
@@ -30,8 +39,6 @@ class FirebaseExerciseSource(ExerciseSource):
             "reps": request.reps,
             "type": "reps",
         }
-        if request.unit is not None:
-            data["unit"] = request.unit
 
         exercises_ref.add(data)
         return data

@@ -9,7 +9,10 @@ from starlette.responses import JSONResponse
 
 from src.dtos import DurationExerciseInput, RepsExerciseInput
 from src.exercises_service import ExerciseService
-from src.exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
+from src.exercises_sources.dtos import (
+    AddDurationExercisesRequest,
+    AddRepsExercisesRequest,
+)
 from src.fetching_exercises import sum_exercises
 from src.get_table_data import get_table_data
 

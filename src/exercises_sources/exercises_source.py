@@ -3,7 +3,10 @@ from datetime import date
 from typing import List
 
 from src.dtos import ExerciseEntryAbstract
-from src.exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
+from src.exercises_sources.dtos import (
+    AddDurationExercisesRequest,
+    AddRepsExercisesRequest,
+)
 
 
 class ExerciseSource(abc.ABC):

@@ -1,12 +1,17 @@
 import os
 from datetime import datetime
+from typing import Annotated
 
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+from src.database_models import Hero, create_db_and_tables, get_session
 from src.dtos import DurationExerciseInput, RepsExerciseInput
 from src.exercises_service import ExerciseService
 from src.exercises_sources.dtos import (
@@ -31,6 +36,47 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+SessionDep = Annotated[Session, Depends(get_session)]
+
+
+class HeroCreate(BaseModel):
+    name: str
+    age: int | None = None
+    secret_name: str
+
+
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+
+@app.post("/heroes/")
+def create_hero(hero: HeroCreate, session: SessionDep) -> dict:
+    new_hero = Hero(name=hero.name, age=hero.age, secret_name=hero.secret_name)
+    session.add(new_hero)
+    session.commit()
+    session.refresh(new_hero)
+    return {
+        "id": new_hero.id,
+        "name": new_hero.name,
+        "age": new_hero.age,
+        "secret_name": new_hero.secret_name,
+    }
+
+
+@app.get("/heroes/")
+def read_heroes(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[dict]:
+    result = session.execute(select(Hero).offset(offset).limit(limit))
+    heroes = result.scalars().all()
+    return [
+        {"id": h.id, "name": h.name, "age": h.age, "secret_name": h.secret_name}
+        for h in heroes
+    ]
 
 
 @app.get("/table", response_class=HTMLResponse)

@@ -6,3 +6,5 @@ pytz
 jinja2
 python-multipart
 pytest
+SQLAlchemy>=2.0
+psycopg[binary]

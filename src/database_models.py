@@ -13,15 +13,6 @@ from sqlalchemy.orm import (
 Base = declarative_base()
 
 
-class Hero(Base):
-    __tablename__ = "hero"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String, index=True)
-    age: Mapped[int | None] = mapped_column(Integer, index=True, nullable=True)
-    secret_name: Mapped[str] = mapped_column(String)
-
-
 class DurationExerciseEntry(Base):
     __tablename__ = "duration_exercise_entry"
 
@@ -66,11 +57,6 @@ def _get_session_factory():
     engine = get_engine()
     _SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     return _SessionLocal
-
-
-def create_db_and_tables():
-    engine = get_engine()
-    Base.metadata.create_all(engine)
 
 
 def get_session() -> Session:

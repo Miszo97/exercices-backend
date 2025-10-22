@@ -12,7 +12,6 @@ from src.database_models import (
     RepsExerciseEntry as RepsExerciseModel,
 )
 from src.database_models import (
-    create_db_and_tables,
     get_engine,
 )
 from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
@@ -27,8 +26,6 @@ class SQLExerciseSource(ExerciseSource):
     """Concrete implementation of ExerciseSource using SQLAlchemy models."""
 
     def __init__(self):
-        # Ensure tables exist
-        create_db_and_tables()
         # Prepare a session factory
         engine = get_engine()
         self._SessionLocal = sessionmaker(

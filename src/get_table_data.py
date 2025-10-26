@@ -47,7 +47,9 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]):
             [
                 str(data[name]["reps"])
                 if data[name]["reps"]
-                else str(data[name]["duration"]) if data[name]["duration"] else ""
+                else str(data[name]["duration"])
+                if data[name]["duration"]
+                else ""
                 for name in exercise_names
             ],
         ]

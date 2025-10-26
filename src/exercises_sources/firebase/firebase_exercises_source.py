@@ -96,9 +96,7 @@ class FirebaseExerciseSource(ExerciseSource):
                 exercises.append(RepsExerciseEntry(date=dt, name=name, reps=reps))
             elif duration is not None:
                 exercises.append(
-                    DurationExerciseEntry(
-                        date=dt, name=name, duration=duration
-                    )
+                    DurationExerciseEntry(date=dt, name=name, duration=duration)
                 )
             else:
                 continue

@@ -123,9 +123,7 @@ class SQLExerciseSource(ExerciseSource):
                 )
             for d in dur_rows:
                 exercises.append(
-                    DurationExerciseEntry(
-                        date=d.date, name=d.name, duration=d.duration
-                    )
+                    DurationExerciseEntry(date=d.date, name=d.name, duration=d.duration)
                 )
 
             exercises.sort(key=lambda x: x.date)

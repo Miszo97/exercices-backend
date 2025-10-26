@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -24,6 +25,9 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+# Set the URL into Alembic config so both offline and online modes use it
+config.set_main_option("sqlalchemy.url", os.getenv("DB_URI"))
 
 
 def run_migrations_offline() -> None:

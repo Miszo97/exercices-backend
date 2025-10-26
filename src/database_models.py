@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from urllib.parse import quote
 
 from sqlalchemy import DateTime, Integer, String, create_engine
 from sqlalchemy.orm import (
@@ -9,7 +10,6 @@ from sqlalchemy.orm import (
     mapped_column,
     sessionmaker,
 )
-from urllib.parse import quote
 
 Base = declarative_base()
 
@@ -44,7 +44,7 @@ def get_engine():
     host = os.getenv("DATABASE_HOST")
     password = os.getenv("DATABASE_PASSWORD")
 
-    database_url = f"postgresql+psycopg://postgres:{quote(password)}@{host}:5432/postgres"
+    database_url = os.getenv("DB_URL")
     connect_args = {}
     if database_url.startswith("sqlite"):
         connect_args = {"check_same_thread": False}

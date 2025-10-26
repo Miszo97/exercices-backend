@@ -2,11 +2,9 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: appdb
+    image: postgres:18-alpine
+    env_file:
+      - compose.env
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -19,9 +17,8 @@ services:
 
   app:
     build: .
-    environment:
-      DATABASE_URL: postgresql+psycopg://app:app@db:5432/appdb
-      PORT: "8080"
+    env_file:
+      - compose.env
     depends_on:
       db:
         condition: service_healthy

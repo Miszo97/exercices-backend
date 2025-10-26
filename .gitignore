@@ -1,2 +1,42 @@
+# IDEs
 .idea
+.vscode/
+
+# OS files
+.DS_Store
+
+# Local credentials (keep the specific file ignore)
 uplifted-sol-455314-s2-00c711321198.json
+*.pem
+*.key
+
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments and local env files
+.venv/
+venv/
+.env
+.env.*
+
+# Tests and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Type checkers / linters
+.mypy_cache/
+.pyright/
+.ruff_cache/
+
+# Docker Compose env files
+compose.env
+compose.*.env

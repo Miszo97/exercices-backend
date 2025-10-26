@@ -26,7 +26,11 @@ class ExerciseService:
         return self.exercise_source.add_duration_exercise(request=request)
 
     def fetch_exercises(
-        self, day: date = None, limit: int = 10, offset: int = 0, last_days: int = None
+        self,
+        day: date = None,
+        limit: int = None,
+        offset: int = 0,
+        last_days: int = None,
     ) -> List[ExerciseEntryAbstract]:
         return self.exercise_source.fetch_exercises(
             day=day, limit=limit, offset=offset, last_days=last_days

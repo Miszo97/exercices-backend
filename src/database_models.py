@@ -41,13 +41,8 @@ def get_engine():
     if _engine is not None:
         return _engine
 
-    host = os.getenv("DATABASE_HOST")
-    password = os.getenv("DATABASE_PASSWORD")
-
-    database_url = os.getenv("DB_URL")
+    database_url = os.getenv("DB_URI")
     connect_args = {}
-    if database_url.startswith("sqlite"):
-        connect_args = {"check_same_thread": False}
 
     _engine = create_engine(database_url, connect_args=connect_args)
     return _engine

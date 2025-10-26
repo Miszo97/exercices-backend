@@ -53,8 +53,6 @@ class FirebaseExerciseSource(ExerciseSource):
             "duration": request.duration,
             "type": "duration",
         }
-        if request.unit is not None:
-            data["unit"] = request.unit
 
         exercises_ref.add(data)
         return data
@@ -94,13 +92,12 @@ class FirebaseExerciseSource(ExerciseSource):
             dt = data.get("date")
             reps = data.get("reps")
             duration = data.get("duration")
-            unit = data.get("unit")
             if reps is not None:
                 exercises.append(RepsExerciseEntry(date=dt, name=name, reps=reps))
             elif duration is not None:
                 exercises.append(
                     DurationExerciseEntry(
-                        date=dt, name=name, duration=duration, unit=unit
+                        date=dt, name=name, duration=duration
                     )
                 )
             else:

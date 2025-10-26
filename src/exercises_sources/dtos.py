@@ -9,4 +9,3 @@ class AddRepsExercisesRequest(BaseModel):
 class AddDurationExercisesRequest(BaseModel):
     name: str
     duration: int
-    unit: str = "seconds"

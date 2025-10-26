@@ -32,7 +32,6 @@ def sum_exercises(
                     date=exercise.date.date(),
                     name=exercise.name,
                     duration=0,
-                    unit=exercise.unit,
                 )
             order.append(key)
 
@@ -40,7 +39,5 @@ def sum_exercises(
             summed[key].reps += exercise.reps
         else:
             summed[key].duration += exercise.duration
-            if exercise.unit is not None:
-                summed[key].unit = exercise.unit
 
     return ExercisesDaySumOutput(exercises=[summed[k] for k in order])

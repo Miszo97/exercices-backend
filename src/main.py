@@ -67,7 +67,7 @@ async def add_duration_exercise_post(
     data: DurationExerciseInput, service: ExerciseService = Depends(get_service)
 ):
     request = AddDurationExercisesRequest(
-        name=data.name, duration=data.duration, unit=data.unit
+        name=data.name, duration=data.duration
     )
     result = service.add_duration_exercise(request=request)
     return {"status": "ok", "data": result}

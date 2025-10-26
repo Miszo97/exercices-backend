@@ -20,13 +20,12 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]):
         date_str = exercise.date.strftime("%Y-%m-%d")
         grouped_by_date.setdefault(
             date_str,
-            {name: {"reps": 0, "duration": 0, "unit": ""} for name in exercise_names},
+            {name: {"reps": 0, "duration": 0} for name in exercise_names},
         )
         if isinstance(exercise, RepsExerciseEntry):
             grouped_by_date[date_str][exercise.name]["reps"] += exercise.reps
         elif isinstance(exercise, DurationExerciseEntry):
             grouped_by_date[date_str][exercise.name]["duration"] += exercise.duration
-            grouped_by_date[date_str][exercise.name]["unit"] = exercise.unit or ""
 
     if not grouped_by_date:
         return exercise_names, []
@@ -38,7 +37,7 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]):
         date_str = current_date.strftime("%Y-%m-%d")
         grouped_by_date.setdefault(
             date_str,
-            {name: {"reps": 0, "duration": 0, "unit": ""} for name in exercise_names},
+            {name: {"reps": 0, "duration": 0} for name in exercise_names},
         )
         current_date += timedelta(days=1)
 
@@ -48,7 +47,7 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]):
             [
                 str(data[name]["reps"])
                 if data[name]["reps"]
-                else f"{data[name]['duration']} {data[name]['unit']}".strip()
+                else str(data[name]["duration"]) if data[name]["duration"] else ""
                 for name in exercise_names
             ],
         ]

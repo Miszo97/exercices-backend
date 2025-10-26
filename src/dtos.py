@@ -30,7 +30,6 @@ class RepsExerciseEntry(ExerciseEntryAbstract):
 @dataclass
 class DurationExerciseEntry(ExerciseEntryAbstract):
     duration: int
-    unit: str
 
 
 @dataclass
@@ -41,7 +40,6 @@ class RepsExerciseDaySum(ExerciseDaySumAbstract):
 @dataclass
 class DurationExerciseDaySum(ExerciseDaySumAbstract):
     duration: int | None = None
-    unit: str | None = None
 
 
 class RepsExerciseInput(BaseModel):
@@ -52,7 +50,6 @@ class RepsExerciseInput(BaseModel):
 class DurationExerciseInput(BaseModel):
     name: str
     duration: int
-    unit: str
 
 
 class ExercisesDaySumOutput(BaseModel):
@@ -66,7 +63,6 @@ class ExercisesDaySumOutput(BaseModel):
                 "name": ex.name,
                 "reps": getattr(ex, "reps", None),
                 "duration": getattr(ex, "duration", None),
-                "unit": getattr(ex, "unit", None),
             }
             for ex in exercises
         ]
@@ -77,7 +73,7 @@ def test_serialization():
         exercises=[
             RepsExerciseDaySum(date=date(2024, 1, 1), name="Push-up", reps=30),
             DurationExerciseDaySum(
-                date=date(2024, 1, 1), name="Running", duration=45, unit="minutes"
+                date=date(2024, 1, 1), name="Running", duration=45
             ),
         ]
     )

@@ -59,13 +59,11 @@ class SQLExerciseSource(ExerciseSource):
 
     def add_duration_exercise(self, request: AddDurationExercisesRequest):
         current_time = self._now_warsaw()
-        unit = request.unit or "seconds"
         with self._session() as session:
             model = DurationExerciseModel(
                 date=current_time,
                 name=request.name,
                 duration=request.duration,
-                unit=unit,
             )
             session.add(model)
             session.commit()
@@ -75,7 +73,6 @@ class SQLExerciseSource(ExerciseSource):
                 "date": model.date,
                 "name": model.name,
                 "duration": model.duration,
-                "unit": model.unit,
                 "type": "duration",
             }
 
@@ -127,7 +124,7 @@ class SQLExerciseSource(ExerciseSource):
             for d in dur_rows:
                 exercises.append(
                     DurationExerciseEntry(
-                        date=d.date, name=d.name, duration=d.duration, unit=d.unit
+                        date=d.date, name=d.name, duration=d.duration
                     )
                 )
 

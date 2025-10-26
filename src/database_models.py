@@ -9,6 +9,7 @@ from sqlalchemy.orm import (
     mapped_column,
     sessionmaker,
 )
+from urllib.parse import quote
 
 Base = declarative_base()
 
@@ -20,7 +21,6 @@ class DurationExerciseEntry(Base):
     date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     duration: Mapped[int] = mapped_column(Integer, nullable=False)
-    unit: Mapped[str] = mapped_column(String, nullable=False)
 
 
 class RepsExerciseEntry(Base):
@@ -41,7 +41,10 @@ def get_engine():
     if _engine is not None:
         return _engine
 
-    database_url = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+    host = os.getenv("DATABASE_HOST")
+    password = os.getenv("DATABASE_PASSWORD")
+
+    database_url = f"postgresql+psycopg://postgres:{quote(password)}@{host}:5432/postgres"
     connect_args = {}
     if database_url.startswith("sqlite"):
         connect_args = {"check_same_thread": False}

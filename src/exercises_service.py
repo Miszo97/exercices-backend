@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List
 
-from src.dtos import ExerciseEntryAbstract
+from src.dtos import DurationExerciseStats, ExerciseEntryAbstract, RepsExerciseStats
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
     AddRepsExercisesRequest,
@@ -35,3 +35,8 @@ class ExerciseService:
         return self.exercise_source.fetch_exercises(
             day=day, limit=limit, offset=offset, last_days=last_days
         )
+
+    def get_exercise_stats(
+        self, name: str
+    ) -> RepsExerciseStats | DurationExerciseStats:
+        pass

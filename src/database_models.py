@@ -10,6 +10,7 @@ from sqlalchemy.orm import (
     mapped_column,
     sessionmaker,
 )
+from sqlalchemy.pool import StaticPool
 
 Base = declarative_base()
 
@@ -41,10 +42,24 @@ def get_engine():
     if _engine is not None:
         return _engine
 
-    database_url = os.getenv("DB_URI")
+    database_url = os.getenv("DB_URI", "sqlite:///:memory:")
     connect_args = {}
+    if database_url.startswith("sqlite"):
+        # For SQLite, especially in-memory DBs, disable same-thread check for multithreaded use
+        connect_args.setdefault("check_same_thread", False)
 
-    _engine = create_engine(database_url, connect_args=connect_args)
+    # Use a StaticPool for in-memory SQLite so the same connection (and thus the same in-memory DB)
+    # is reused across the application/tests.
+    if database_url.startswith("sqlite") and (
+        ":memory:" in database_url or database_url.rstrip("/").endswith("sqlite://")
+    ):
+        _engine = create_engine(
+            database_url,
+            connect_args=connect_args,
+            poolclass=StaticPool,
+        )
+    else:
+        _engine = create_engine(database_url, connect_args=connect_args)
     return _engine
 
 

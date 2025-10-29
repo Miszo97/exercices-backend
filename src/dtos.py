@@ -68,11 +68,9 @@ class ExercisesDaySumOutput(BaseModel):
         ]
 
 
-def test_serialization():
-    output = ExercisesDaySumOutput(
-        exercises=[
-            RepsExerciseDaySum(date=date(2024, 1, 1), name="Push-up", reps=30),
-            DurationExerciseDaySum(date=date(2024, 1, 1), name="Running", duration=45),
-        ]
-    )
-    print(output.model_dump_json(indent=2))
+class RepsExerciseStats(BaseModel):
+    total_reps: int | None = None
+
+
+class DurationExerciseStats(BaseModel):
+    total_duration: int | None = None

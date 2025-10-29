@@ -1,8 +1,9 @@
 from datetime import date, datetime, timedelta
 from typing import List
 
+import pytest
 import pytz
-from sqlalchemy import and_, select
+from sqlalchemy import and_, create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.database_models import (
@@ -25,11 +26,11 @@ from src.exercises_sources.exercises_source import ExerciseSource
 class SQLExerciseSource(ExerciseSource):
     """Concrete implementation of ExerciseSource using SQLAlchemy models."""
 
-    def __init__(self):
+    def __init__(self, get_engine_method=get_engine):
         # Prepare a session factory
-        engine = get_engine()
+        self.engine = get_engine_method()
         self._SessionLocal = sessionmaker(
-            bind=engine, autoflush=False, autocommit=False
+            bind=self.engine, autoflush=False, autocommit=False
         )
 
     @staticmethod

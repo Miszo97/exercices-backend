@@ -199,7 +199,7 @@ class SQLExerciseSource(ExerciseSource):
                     DurationExerciseEntry(date=d.date, name=d.name, duration=d.duration)
                 )
 
-            exercises.sort(key=lambda x: x.date)
+            exercises.sort(key=lambda x: x.date, reverse=True)
 
             if offset is not None:
                 exercises = exercises[offset:]

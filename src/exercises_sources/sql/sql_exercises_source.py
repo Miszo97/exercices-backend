@@ -142,6 +142,72 @@ class SQLExerciseSource(ExerciseSource):
 
             return exercises
 
+    def fetch_exercises_by_name(
+        self,
+        name: str,
+        day: date = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        last_days: int | None = None,
+    ) -> List[ExerciseEntryAbstract]:
+        with self._session() as session:
+            start_dt = end_dt = None
+            if day:
+                day_date = (
+                    day
+                    if isinstance(day, date) and not isinstance(day, datetime)
+                    else day.date()
+                )
+                start_dt = datetime.combine(day_date, datetime.min.time())
+                end_dt = datetime.combine(
+                    day_date + timedelta(days=1), datetime.min.time()
+                )
+            elif last_days is not None:
+                now = datetime.now()
+                start_dt = now - timedelta(days=last_days)
+                end_dt = now
+
+            reps_stmt = select(RepsExerciseModel).where(RepsExerciseModel.name == name)
+            dur_stmt = select(DurationExerciseModel).where(
+                DurationExerciseModel.name == name
+            )
+
+            if start_dt is not None and end_dt is not None:
+                reps_stmt = reps_stmt.where(
+                    and_(
+                        RepsExerciseModel.date >= start_dt,
+                        RepsExerciseModel.date < end_dt,
+                    )
+                )
+                dur_stmt = dur_stmt.where(
+                    and_(
+                        DurationExerciseModel.date >= start_dt,
+                        DurationExerciseModel.date < end_dt,
+                    )
+                )
+
+            reps_rows = session.execute(reps_stmt).scalars().all()
+            dur_rows = session.execute(dur_stmt).scalars().all()
+
+            exercises: List[ExerciseEntryAbstract] = []
+            for r in reps_rows:
+                exercises.append(
+                    RepsExerciseEntry(date=r.date, name=r.name, reps=r.reps)
+                )
+            for d in dur_rows:
+                exercises.append(
+                    DurationExerciseEntry(date=d.date, name=d.name, duration=d.duration)
+                )
+
+            exercises.sort(key=lambda x: x.date)
+
+            if offset is not None:
+                exercises = exercises[offset:]
+            if limit is not None:
+                exercises = exercises[:limit]
+
+            return exercises
+
     def get_exercise_stats(
         self, name: str
     ) -> RepsExerciseStats | DurationExerciseStats:
@@ -172,7 +238,9 @@ class SQLExerciseSource(ExerciseSource):
                 ).scalar()
                 return RepsExerciseStats(
                     total_reps=int(reps_total),
-                    reps_in_last_30_days=int(reps_last_30) if reps_last_30 is not None else None,
+                    reps_in_last_30_days=int(reps_last_30)
+                    if reps_last_30 is not None
+                    else None,
                 )
 
             # Sum duration for the given name (all time)
@@ -197,7 +265,9 @@ class SQLExerciseSource(ExerciseSource):
                 ).scalar()
                 return DurationExerciseStats(
                     total_duration=int(duration_total),
-                    duration_in_last_30_days=int(duration_last_30) if duration_last_30 is not None else 0,
+                    duration_in_last_30_days=int(duration_last_30)
+                    if duration_last_30 is not None
+                    else 0,
                 )
 
             # No entries found for this name

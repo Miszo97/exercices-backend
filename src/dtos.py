@@ -76,4 +76,3 @@ class RepsExerciseStats(BaseModel):
 class DurationExerciseStats(BaseModel):
     total_duration: int | None = None
     duration_in_last_30_days: int | None = None
-

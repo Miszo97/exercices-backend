@@ -88,15 +88,73 @@ class FirebaseExerciseSource(ExerciseSource):
         exercises: List[ExerciseEntryAbstract] = []
         for doc in docs:
             data = doc.to_dict()
-            name = data.get("name")
+            ex_name = data.get("name")
             dt = data.get("date")
             reps = data.get("reps")
             duration = data.get("duration")
             if reps is not None:
-                exercises.append(RepsExerciseEntry(date=dt, name=name, reps=reps))
+                exercises.append(RepsExerciseEntry(date=dt, name=ex_name, reps=reps))
             elif duration is not None:
                 exercises.append(
-                    DurationExerciseEntry(date=dt, name=name, duration=duration)
+                    DurationExerciseEntry(date=dt, name=ex_name, duration=duration)
+                )
+            else:
+                continue
+
+        if offset is not None:
+            exercises = exercises[offset:]
+        if limit is not None:
+            exercises = exercises[:limit]
+
+        return exercises
+
+    def fetch_exercises_by_name(
+        self,
+        name: str,
+        day: date = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        last_days: int | None = None,
+    ) -> List[ExerciseEntryAbstract]:
+        exercises_ref = (
+            self.db.collection("exercises").order_by("date").where("name", "==", name)
+        )
+
+        if day:
+            docs = (
+                exercises_ref.where(
+                    "date", ">=", datetime.combine(day, datetime.min.time())
+                )
+                .where(
+                    "date",
+                    "<",
+                    datetime.combine(day + timedelta(days=1), datetime.min.time()),
+                )
+                .stream()
+            )
+        elif last_days is not None:
+            now = datetime.now()
+            start_date = now - timedelta(days=last_days)
+            docs = (
+                exercises_ref.where("date", ">=", start_date)
+                .where("date", "<=", now)
+                .stream()
+            )
+        else:
+            docs = exercises_ref.stream()
+
+        exercises: List[ExerciseEntryAbstract] = []
+        for doc in docs:
+            data = doc.to_dict()
+            ex_name = data.get("name")
+            dt = data.get("date")
+            reps = data.get("reps")
+            duration = data.get("duration")
+            if reps is not None:
+                exercises.append(RepsExerciseEntry(date=dt, name=ex_name, reps=reps))
+            elif duration is not None:
+                exercises.append(
+                    DurationExerciseEntry(date=dt, name=ex_name, duration=duration)
                 )
             else:
                 continue

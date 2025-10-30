@@ -1,7 +1,6 @@
 from datetime import date
 from typing import List
 
-from src.exercises_sources.sql import SQLExerciseSource
 from src.dtos import DurationExerciseStats, ExerciseEntryAbstract, RepsExerciseStats
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
@@ -11,6 +10,8 @@ from src.exercises_sources.exercises_source import ExerciseSource
 from src.exercises_sources.firebase.firebase_exercises_source import (
     FirebaseExerciseSource,
 )
+from src.exercises_sources.sql import SQLExerciseSource
+from src.fetching_exercises import sum_exercises
 
 
 class ExerciseService:
@@ -41,3 +42,20 @@ class ExerciseService:
         self, name: str
     ) -> RepsExerciseStats | DurationExerciseStats:
         return self.exercise_source.get_exercise_stats(name=name)
+
+    def get_exercise_history(
+        self,
+        name: str,
+        last_days: int | None = None,
+    ) -> list[dict]:
+        """
+        Return the same output shape as `/today` (a list of daily sums, not wrapped),
+        but filtered to the specific exercise name and optionally restricted to the
+        last `last_days` days. If `last_days` is None, returns all-time.
+        Filtering by name is pushed down to the underlying source (SQL/Firestore).
+        """
+        entries = self.exercise_source.fetch_exercises_by_name(
+            name=name, last_days=last_days
+        )
+        summed = sum_exercises(entries)
+        return summed.model_dump()["exercises"]

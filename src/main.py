@@ -94,6 +94,17 @@ async def read_json(
     return JSONResponse(content=result.model_dump())
 
 
+@app.get("/exercises/{exercise_name}")
+async def get_exercise_history(
+    exercise_name: str,
+    last_days: int = Query(0, ge=0),
+    service: ExerciseService = Depends(get_service),
+):
+    # Delegate to service method that encapsulates the filtering and summing logic
+    data = service.get_exercise_history(name=exercise_name, last_days=last_days or None)
+    return JSONResponse(content=data)
+
+
 @app.get("/exercises/{exercise_name}/stats")
 async def get_exercise_stats_view(
     exercise_name: str, service: ExerciseService = Depends(get_service)

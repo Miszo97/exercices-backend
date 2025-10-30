@@ -150,7 +150,7 @@ class SQLExerciseSource(ExerciseSource):
         # Otherwise, if there are duration-based entries, return DurationExerciseStats.
         # If none exist, return an empty RepsExerciseStats with total_reps=None.
         with self._session() as session:
-            # Sum reps for the given name
+            # Sum reps for the given name (all time)
             reps_total = session.execute(
                 select(func.sum(RepsExerciseModel.reps)).where(
                     RepsExerciseModel.name == name
@@ -158,9 +158,24 @@ class SQLExerciseSource(ExerciseSource):
             ).scalar()
 
             if reps_total is not None:
-                return RepsExerciseStats(total_reps=int(reps_total))
+                # Also compute sum for the last 30 days
+                now = self._now_warsaw()
+                start_30 = now - timedelta(days=30)
+                reps_last_30 = session.execute(
+                    select(func.sum(RepsExerciseModel.reps)).where(
+                        and_(
+                            RepsExerciseModel.name == name,
+                            RepsExerciseModel.date >= start_30,
+                            RepsExerciseModel.date <= now,
+                        )
+                    )
+                ).scalar()
+                return RepsExerciseStats(
+                    total_reps=int(reps_total),
+                    reps_in_last_30_days=int(reps_last_30) if reps_last_30 is not None else None,
+                )
 
-            # Sum duration for the given name
+            # Sum duration for the given name (all time)
             duration_total = session.execute(
                 select(func.sum(DurationExerciseModel.duration)).where(
                     DurationExerciseModel.name == name
@@ -168,7 +183,22 @@ class SQLExerciseSource(ExerciseSource):
             ).scalar()
 
             if duration_total is not None:
-                return DurationExerciseStats(total_duration=int(duration_total))
+                # Also compute sum for the last 30 days
+                now = self._now_warsaw()
+                start_30 = now - timedelta(days=30)
+                duration_last_30 = session.execute(
+                    select(func.sum(DurationExerciseModel.duration)).where(
+                        and_(
+                            DurationExerciseModel.name == name,
+                            DurationExerciseModel.date >= start_30,
+                            DurationExerciseModel.date <= now,
+                        )
+                    )
+                ).scalar()
+                return DurationExerciseStats(
+                    total_duration=int(duration_total),
+                    duration_in_last_30_days=int(duration_last_30) if duration_last_30 is not None else 0,
+                )
 
             # No entries found for this name
             return RepsExerciseStats(total_reps=None)

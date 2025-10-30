@@ -1,7 +1,6 @@
 fastapi
 uvicorn[standard]
 gunicorn
-firebase_admin
 pytz
 jinja2
 python-multipart

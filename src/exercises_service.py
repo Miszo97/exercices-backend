@@ -7,9 +7,6 @@ from src.exercises_sources.dtos import (
     AddRepsExercisesRequest,
 )
 from src.exercises_sources.exercises_source import ExerciseSource
-from src.exercises_sources.firebase.firebase_exercises_source import (
-    FirebaseExerciseSource,
-)
 from src.exercises_sources.sql import SQLExerciseSource
 from src.fetching_exercises import sum_exercises
 
@@ -48,12 +45,6 @@ class ExerciseService:
         name: str,
         last_days: int | None = None,
     ) -> list[dict]:
-        """
-        Return the same output shape as `/today` (a list of daily sums, not wrapped),
-        but filtered to the specific exercise name and optionally restricted to the
-        last `last_days` days. If `last_days` is None, returns all-time.
-        Filtering by name is pushed down to the underlying source (SQL/Firestore).
-        """
         entries = self.exercise_source.fetch_exercises_by_name(
             name=name, last_days=last_days
         )

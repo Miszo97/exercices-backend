@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 import pytz
-from sqlalchemy import and_, create_engine, select
+from sqlalchemy import and_, create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.database_models import (
@@ -15,7 +15,13 @@ from src.database_models import (
 from src.database_models import (
     get_engine,
 )
-from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
+from src.dtos import (
+    DurationExerciseEntry,
+    DurationExerciseStats,
+    ExerciseEntryAbstract,
+    RepsExerciseEntry,
+    RepsExerciseStats,
+)
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
     AddRepsExercisesRequest,
@@ -135,3 +141,34 @@ class SQLExerciseSource(ExerciseSource):
                 exercises = exercises[:limit]
 
             return exercises
+
+    def get_exercise_stats(
+        self, name: str
+    ) -> RepsExerciseStats | DurationExerciseStats:
+        # Compute aggregate stats for a given exercise name.
+        # If there are reps-based entries with this name, return RepsExerciseStats.
+        # Otherwise, if there are duration-based entries, return DurationExerciseStats.
+        # If none exist, return an empty RepsExerciseStats with total_reps=None.
+        with self._session() as session:
+            # Sum reps for the given name
+            reps_total = session.execute(
+                select(func.sum(RepsExerciseModel.reps)).where(
+                    RepsExerciseModel.name == name
+                )
+            ).scalar()
+
+            if reps_total is not None:
+                return RepsExerciseStats(total_reps=int(reps_total))
+
+            # Sum duration for the given name
+            duration_total = session.execute(
+                select(func.sum(DurationExerciseModel.duration)).where(
+                    DurationExerciseModel.name == name
+                )
+            ).scalar()
+
+            if duration_total is not None:
+                return DurationExerciseStats(total_duration=int(duration_total))
+
+            # No entries found for this name
+            return RepsExerciseStats(total_reps=None)

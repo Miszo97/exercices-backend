@@ -1,6 +1,7 @@
 from datetime import date
 from typing import List
 
+from src.exercises_sources.sql import SQLExerciseSource
 from src.dtos import DurationExerciseStats, ExerciseEntryAbstract, RepsExerciseStats
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
@@ -15,7 +16,7 @@ from src.exercises_sources.firebase.firebase_exercises_source import (
 class ExerciseService:
     def __init__(self, exercise_source: ExerciseSource = None):
         if exercise_source is None:
-            self.exercise_source = FirebaseExerciseSource()
+            self.exercise_source = SQLExerciseSource()
         else:
             self.exercise_source = exercise_source
 
@@ -39,4 +40,4 @@ class ExerciseService:
     def get_exercise_stats(
         self, name: str
     ) -> RepsExerciseStats | DurationExerciseStats:
-        pass
+        return self.exercise_source.get_exercise_stats(name=name)

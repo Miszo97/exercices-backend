@@ -94,6 +94,14 @@ async def read_json(
     return JSONResponse(content=result.model_dump())
 
 
+@app.get("/exercises/{exercise_name}/stats")
+async def get_exercise_stats_view(
+    exercise_name: str, service: ExerciseService = Depends(get_service)
+):
+    stats = service.get_exercise_stats(name=exercise_name)
+    return JSONResponse(content=stats.model_dump())
+
+
 def test_exercise_endpoint():
     from fastapi.testclient import TestClient
 

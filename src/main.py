@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import Annotated
 
+import pytz
 from fastapi import Depends, FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -75,7 +76,8 @@ async def add_duration_exercise_post(
 async def read_today_json(
     service: ExerciseService = Depends(get_service),
 ):
-    result = service.fetch_exercises(day=datetime.now())
+    cest = pytz.timezone("Europe/Warsaw")
+    result = service.fetch_exercises(day=datetime.now(cest))
     result = sum_exercises(result)
     return JSONResponse(content=result.model_dump()["exercises"])
 

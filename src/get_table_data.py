@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
-from utils import convert_seconds_to_minutes_format
+from src.utils import convert_seconds_to_minutes_format
 
 
 def ordered_set(iterable):

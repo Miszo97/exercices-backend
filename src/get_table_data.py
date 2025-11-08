@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
+from utils import convert_seconds_to_minutes_format
 
 
 def ordered_set(iterable):
@@ -47,7 +48,7 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]):
             [
                 str(data[name]["reps"])
                 if data[name]["reps"]
-                else str(data[name]["duration"])
+                else convert_seconds_to_minutes_format(seconds=data[name]["duration"])
                 if data[name]["duration"]
                 else ""
                 for name in exercise_names

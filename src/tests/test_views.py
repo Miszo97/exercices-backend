@@ -3,7 +3,6 @@ from datetime import datetime
 from fastapi.testclient import TestClient
 
 from database_models import DurationExerciseEntry, RepsExerciseEntry
-from exercises_sources.dtos import AddDurationExercisesRequest, AddRepsExercisesRequest
 from exercises_sources.sql import SQLExerciseSource
 from src.main import app
 

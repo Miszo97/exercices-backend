@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from src.database_models import Base, get_engine
 from src.exercises_sources.sql import SQLExerciseSource

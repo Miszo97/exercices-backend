@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from urllib.parse import quote
 
 from sqlalchemy import DateTime, Integer, String, create_engine
 from sqlalchemy.orm import (

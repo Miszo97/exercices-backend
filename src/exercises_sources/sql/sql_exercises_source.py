@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from typing import Dict, List
 
 import pytz
-from sqlalchemy import Date, and_, cast, func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.database_models import (
@@ -15,7 +15,7 @@ from src.database_models import (
     get_engine,
 )
 from src.dtos import (
-    DurationExerciseStats,
+    DurationExerciseEntry, DurationExerciseStats,
     ExerciseEntryAbstract,
     RepsExerciseEntry,
     RepsExerciseStats,

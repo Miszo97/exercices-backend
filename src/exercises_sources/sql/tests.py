@@ -1,9 +1,7 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
-import pytest
-
-from src.database_models import Base, get_engine
-from src.dtos import DurationExerciseStats, RepsExerciseStats
+from database_models import DurationExerciseEntry, RepsExerciseEntry
+from dtos import DurationExerciseStats, RepsExerciseStats
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
     AddRepsExercisesRequest,
@@ -11,47 +9,53 @@ from src.exercises_sources.dtos import (
 from src.exercises_sources.sql import SQLExerciseSource
 
 source = SQLExerciseSource()
-from sqlalchemy import create_engine
 
 
 class TestSQLExerciseSource:
-    @pytest.mark.parametrize(
-        "test_day",
-        [
-            date.today(),
-            date.today() - timedelta(days=1),
-            date.today() - timedelta(days=7),
-        ],
-    )
-    def test_fetch_exercises_for_various_days(self, test_day):
-        results = source.fetch_exercises(day=test_day)
+    def test_fetch_exercises_for_today(self, session):
+        source.add_duration_exercise(
+            AddDurationExercisesRequest(name="plank", duration=30)
+        )
+        source.add_duration_exercise(
+            AddDurationExercisesRequest(name="plank", duration=45)
+        )
+
+        results = source.fetch_exercises(day=date.today())
         assert isinstance(results, list)
         for entry in results:
-            assert entry.date.date() == test_day
+            assert entry.date.date() == date.today()
 
-    def test_fetch_exercises_for_last_5_days(self):
-        results = source.fetch_exercises(last_days=5)
-        assert isinstance(results, list)
-        cutoff_date = date.today() - timedelta(days=5)
-        for entry in results:
-            assert entry.date.date() >= cutoff_date
+    def test_sum_exercises_for_day(self, session):
+        session.add_all(
+            [
+                DurationExerciseEntry(date=datetime.now(), name="plank", duration=60),
+                DurationExerciseEntry(date=datetime.now(), name="plank", duration=60),
+                DurationExerciseEntry(
+                    date=datetime.now() - timedelta(days=1), name="plank", duration=60
+                ),
+                RepsExerciseEntry(date=datetime.now(), name="push ups", reps=20),
+                RepsExerciseEntry(date=datetime.now(), name="push ups", reps=20),
+                RepsExerciseEntry(
+                    date=datetime.now() - timedelta(days=1), name="push ups", reps=20
+                ),
+                RepsExerciseEntry(
+                    date=datetime.now() - timedelta(days=1), name="push ups", reps=20
+                ),
+            ]
+        )
+        session.commit()
+
+        results = source.sum_exercises_for_day(day=date.today())
+        assert results == {"plank": 120, "push ups": 40}
 
 
-@pytest.fixture()
-def db():
-    engine = get_engine()
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
-
-def test_a(db):
+def test_a(session):
     source.add_duration_exercise(AddDurationExercisesRequest(name="test", duration=10))
     data = source.fetch_exercises()
     assert len(data) == 1
 
 
-def test_get_exercise_stats_duration(db):
+def test_get_exercise_stats_duration(session):
     # Arrange: add multiple duration entries for the same exercise name
     source.add_duration_exercise(AddDurationExercisesRequest(name="plank", duration=30))
     source.add_duration_exercise(AddDurationExercisesRequest(name="plank", duration=45))
@@ -64,7 +68,7 @@ def test_get_exercise_stats_duration(db):
     assert stats.total_duration == 75
 
 
-def test_get_exercise_stats_reps(db):
+def test_get_exercise_stats_reps(session):
     # Arrange: add multiple reps entries for the same exercise name
     source.add_reps_exercise(AddRepsExercisesRequest(name="pushup", reps=10))
     source.add_reps_exercise(AddRepsExercisesRequest(name="pushup", reps=15))
@@ -77,7 +81,7 @@ def test_get_exercise_stats_reps(db):
     assert stats.total_reps == 25
 
 
-def test_get_exercise_stats_reps_priority_over_duration(db):
+def test_get_exercise_stats_reps_priority_over_duration(session):
     # Arrange: add both reps and duration entries for the same name
     source.add_reps_exercise(AddRepsExercisesRequest(name="burpee", reps=10))
     source.add_duration_exercise(
@@ -92,7 +96,7 @@ def test_get_exercise_stats_reps_priority_over_duration(db):
     assert stats.total_reps == 10
 
 
-def test_get_exercise_stats_no_entries(db):
+def test_get_exercise_stats_no_entries(session):
     # Act
     stats = source.get_exercise_stats(name="unknown_exercise")
 

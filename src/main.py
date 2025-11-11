@@ -77,9 +77,8 @@ async def read_today_json(
     service: ExerciseService = Depends(get_service),
 ):
     cest = pytz.timezone("Europe/Warsaw")
-    result = service.fetch_exercises(day=datetime.now(cest))
-    result = sum_exercises(result)
-    return JSONResponse(content=result.model_dump()["exercises"])
+    result = service.sum_exercises_for_day(day=datetime.now(cest).date())
+    return JSONResponse(content=result)
 
 
 @app.get("/exercises")

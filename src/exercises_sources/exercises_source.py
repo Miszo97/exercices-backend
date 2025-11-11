@@ -1,6 +1,6 @@
 import abc
 from datetime import date
-from typing import List
+from typing import Dict, List
 
 from src.dtos import DurationExerciseStats, ExerciseEntryAbstract, RepsExerciseStats
 from src.exercises_sources.dtos import (
@@ -22,11 +22,10 @@ class ExerciseSource(abc.ABC):
     def fetch_exercises(
         self, day: date = None, limit=None, offset=None, last_days: int = None
     ) -> List[ExerciseEntryAbstract]:
-        """Fetch exercises with optional time window.
-        - day: restrict to a specific calendar day
-        - last_days: restrict to last N days (ignored if day is provided)
-        - limit/offset: pagination applied after sorting by date ascending
-        """
+        pass
+
+    @abc.abstractmethod
+    def sum_exercises_for_day(self, day: date = None) -> Dict[str, int]:
         pass
 
     @abc.abstractmethod

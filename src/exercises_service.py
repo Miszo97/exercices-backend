@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List
+from typing import Dict, List
 
 from src.dtos import DurationExerciseStats, ExerciseEntryAbstract, RepsExerciseStats
 from src.exercises_sources.dtos import (
@@ -34,6 +34,12 @@ class ExerciseService:
         return self.exercise_source.fetch_exercises(
             day=day, limit=limit, offset=offset, last_days=last_days
         )
+
+    def sum_exercises_for_day(
+        self,
+        day: date = None,
+    ) -> Dict[str, int]:
+        return self.exercise_source.sum_exercises_for_day(day=day)
 
     def get_exercise_stats(
         self, name: str

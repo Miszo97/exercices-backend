@@ -1,9 +1,8 @@
 from datetime import date, datetime, timedelta
-from typing import List
+from typing import Dict, List
 
-import pytest
 import pytz
-from sqlalchemy import and_, create_engine, func, select
+from sqlalchemy import Date, and_, cast, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.database_models import (
@@ -16,7 +15,6 @@ from src.database_models import (
     get_engine,
 )
 from src.dtos import (
-    DurationExerciseEntry,
     DurationExerciseStats,
     ExerciseEntryAbstract,
     RepsExerciseEntry,
@@ -82,6 +80,26 @@ class SQLExerciseSource(ExerciseSource):
                 "duration": model.duration,
                 "type": "duration",
             }
+
+    def sum_exercises_for_day(self, day: date = None) -> Dict[str, int]:
+        with self._session() as session:
+            duration_response = (
+                session.query(
+                    DurationExerciseModel.name, func.sum(DurationExerciseModel.duration)
+                )
+                .where(func.DATE(DurationExerciseModel.date) == day)
+                .group_by(DurationExerciseModel.name)
+                .all()
+            )
+
+            reps_response = (
+                session.query(RepsExerciseModel.name, func.sum(RepsExerciseModel.reps))
+                .where(func.DATE(RepsExerciseModel.date) == day)
+                .group_by(RepsExerciseModel.name)
+                .all()
+            )
+
+            return {key: val for key, val in reps_response + duration_response}
 
     def fetch_exercises(
         self, day: date = None, limit=None, offset=None, last_days: int = None

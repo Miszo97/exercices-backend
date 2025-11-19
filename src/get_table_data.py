@@ -10,51 +10,66 @@ def ordered_set(iterable):
     return list(collections.OrderedDict.fromkeys(iterable))
 
 
-def get_table_data(exercises: List[ExerciseEntryAbstract]):
+from datetime import datetime, timedelta, date
+from collections import defaultdict
+from typing import List, Tuple, Any
+
+
+# Assuming these imports exist in your project context
+# from models import ExerciseEntryAbstract, RepsExerciseEntry, DurationExerciseEntry
+# from utils import convert_seconds_to_minutes_format
+
+def get_table_data(exercises: List[ExerciseEntryAbstract]) -> Tuple[List[str], List[List[Any]]]:
     if not exercises:
         return [], []
 
-    exercise_names = list(dict.fromkeys((exercise.name for exercise in exercises)))
+    # 1. Extract unique exercise names while preserving order
+    exercise_names = list(dict.fromkeys(e.name for e in exercises))
 
-    grouped_by_date: dict[str, dict[str, dict[str, object]]] = {}
+    # 2. Group data: {(date, exercise_name): {'reps': 0, 'duration': 0}}
+    # Using defaultdict avoids manual initialization checks
+    daily_totals = defaultdict(lambda: {"reps": 0, "duration": 0})
+
+    # Track min_date found in data to start the table
+    dates = [e.date.date() if isinstance(e.date, datetime) else e.date for e in exercises]
+    min_date = min(dates) if dates else date.today()
+
     for exercise in exercises:
-        date_str = exercise.date.strftime("%Y-%m-%d")
-        grouped_by_date.setdefault(
-            date_str,
-            {name: {"reps": 0, "duration": 0} for name in exercise_names},
-        )
+        # Normalize to date object to ignore time components
+        entry_date = exercise.date.date() if isinstance(exercise.date, datetime) else exercise.date
+        key = (entry_date, exercise.name)
+
         if isinstance(exercise, RepsExerciseEntry):
-            grouped_by_date[date_str][exercise.name]["reps"] += exercise.reps
+            daily_totals[key]["reps"] += exercise.reps
         elif isinstance(exercise, DurationExerciseEntry):
-            grouped_by_date[date_str][exercise.name]["duration"] += exercise.duration
+            daily_totals[key]["duration"] += exercise.duration
 
-    if not grouped_by_date:
-        return exercise_names, []
+    # 3. Generate Rows (Iterate from first date to today)
+    rows = []
+    current_date = min_date
+    today = date.today()
 
-    first_date = min(datetime.strptime(date, "%Y-%m-%d") for date in grouped_by_date)
-    today = datetime.now()
-    current_date = first_date
     while current_date <= today:
-        date_str = current_date.strftime("%Y-%m-%d")
-        grouped_by_date.setdefault(
-            date_str,
-            {name: {"reps": 0, "duration": 0} for name in exercise_names},
-        )
-        current_date += timedelta(days=1)
+        row_data = [current_date.strftime("%Y-%m-%d")]
 
-    rows = [
-        [
-            date,
-            [
-                str(data[name]["reps"])
-                if data[name]["reps"]
-                else convert_seconds_to_minutes_format(seconds=data[name]["duration"])
-                if data[name]["duration"]
-                else ""
-                for name in exercise_names
-            ],
-        ]
-        for date, data in sorted(grouped_by_date.items())
-    ]
+        for name in exercise_names:
+            stats = daily_totals.get((current_date, name))
+
+            if not stats:
+                row_data.append("")
+                continue
+
+            # Formatting Logic
+            if stats["reps"] > 0:
+                val = str(stats["reps"])
+            elif stats["duration"] > 0:
+                val = convert_seconds_to_minutes_format(seconds=stats["duration"])
+            else:
+                val = ""
+
+            row_data.append(val)
+
+        rows.append(row_data)
+        current_date += timedelta(days=1)
 
     return exercise_names, rows

@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  app-dev:
+    build: .
+    env_file:
+      - compose.dev.env
+    ports:
+      - "8090:8080"
+    volumes:
+      - .:/app
+    networks:
+      - shared-db
+
+networks:
+  shared-db:
+    external: true
+    # This must match the network name created by the main stack.
+    # By default, Docker Compose creates a network named <project>_default, where <project>
+    # is usually the folder name. Adjust if your main stack uses a different project name.
+    name: exercises-backend_default

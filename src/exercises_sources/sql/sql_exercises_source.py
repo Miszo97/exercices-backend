@@ -15,7 +15,8 @@ from src.database_models import (
     get_engine,
 )
 from src.dtos import (
-    DurationExerciseEntry, DurationExerciseStats,
+    DurationExerciseEntry,
+    DurationExerciseStats,
     ExerciseEntryAbstract,
     RepsExerciseEntry,
     RepsExerciseStats,

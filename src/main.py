@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Annotated
 
 import pytz
-from fastapi import Depends, FastAPI, Query, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -54,18 +54,27 @@ async def read_root(
     )
 
 
-@app.post("/reps")
+async def check_access_key(request: Request):
+    access_key = request.headers.get("Authorization")
+    if access_key == "my_strong_password":
+        return True
+    raise HTTPException(status_code=401, detail="Invalid access key")
+
+
+@app.post("/reps", dependencies=[Depends(check_access_key)])
 async def add_reps_exercise_post(
-    data: RepsExerciseInput, service: ExerciseService = Depends(get_service)
+    data: RepsExerciseInput,
+    service: ExerciseService = Depends(get_service),
 ):
     request = AddRepsExercisesRequest(name=data.name, reps=data.reps)
     result = service.add_reps_exercise(request=request)
     return {"status": "ok", "data": result}
 
 
-@app.post("/duration")
+@app.post("/duration", dependencies=[Depends(check_access_key)])
 async def add_duration_exercise_post(
-    data: DurationExerciseInput, service: ExerciseService = Depends(get_service)
+    data: DurationExerciseInput,
+    service: ExerciseService = Depends(get_service),
 ):
     request = AddDurationExercisesRequest(name=data.name, duration=data.duration)
     result = service.add_duration_exercise(request=request)
@@ -101,9 +110,13 @@ async def get_exercise_history(
     last_days: int = Query(0, ge=0),
     service: ExerciseService = Depends(get_service),
 ):
-    # Delegate to service method that encapsulates the filtering and summing logic
     data = service.get_exercise_history(name=exercise_name, last_days=last_days or None)
     return JSONResponse(content=data)
+
+
+@app.get("/")
+async def root(request: Request):
+    return request.cookies.get("access_token")
 
 
 @app.get("/exercises/{exercise_name}/stats")
@@ -112,6 +125,29 @@ async def get_exercise_stats_view(
 ):
     stats = service.get_exercise_stats(name=exercise_name)
     return JSONResponse(content=stats.model_dump())
+
+
+@app.post("/api/set_auth_token/")
+async def set_auth_token_view(password: Annotated[str, Form()]):
+    response = JSONResponse(content={"status": "ok"})
+    response.set_cookie(
+        key="access_token",
+        value=password,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
+    return response
+
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_form():
+    return """
+    <form action="/api/set_auth_token/" method="post">
+        <label>Password: <input type="password" name="password"></label>
+        <button type="submit">Submit</button>
+    </form>
+    """
 
 
 def test_exercise_endpoint():

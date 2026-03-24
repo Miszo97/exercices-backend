@@ -1,0 +1,46 @@
+{
+  "name": "exercises-backend",
+  "dockerComposeFile": [
+    "../docker-compose-dev.yml"
+  ],
+  "service": "app-dev",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "remoteUser": "root",
+  "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+  "customizations": {
+    "zed": {
+      "settings": {
+        "languages": {
+          "Python": {
+            "language_servers": [
+              "pyright"
+            ],
+            "formatter": "language_server"
+          }
+        },
+        "features": {
+          "inline_completion_provider": "none"
+        },
+        "lsp": {
+          "pyright": {
+            "settings": {
+              "python": {
+                "pythonPath": "/usr/local/bin/python"
+              },
+              "python.analysis": {
+                "extraPaths": [
+                  "/app",
+                  "/app/src"
+                ],
+                "autoSearchPaths": true,
+                "useLibraryCodeForTypes": true,
+                "diagnosticMode": "workspace"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

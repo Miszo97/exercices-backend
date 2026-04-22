@@ -164,14 +164,9 @@ async def set_auth_token_view(password: Annotated[str, Form()]):
 
 
 @app.get("/login", response_class=HTMLResponse)
-async def login_form():
+async def login_form(request: Request):
     """Render a simple login form."""
-    return """
-    <form action="/api/set_auth_token/" method="post">
-        <label>Password: <input type="password" name="password"></label>
-        <button type="submit">Submit</button>
-    </form>
-    """
+    return templates.TemplateResponse("login.html", {"request": request})
 
 
 def test_exercise_endpoint():

@@ -3,12 +3,12 @@ from typing import List
 
 from src.dtos import (
     DurationExerciseDaySum,
-    DurationExerciseEntry,
     ExerciseDaySumAbstract,
     ExerciseEntryAbstract,
     ExercisesDaySumOutput,
     RepsExerciseDaySum,
     RepsExerciseEntry,
+    dfs,
 )
 
 
@@ -19,7 +19,7 @@ def sum_exercises(
     order: list[tuple[date, str, type]] = []
 
     for exercise in exercises:
-        if not isinstance(exercise, (RepsExerciseEntry, DurationExerciseEntry)):
+        if not isinstance(exercise, (RepsExerciseEntry, dfs)):
             continue
         key = (exercise.date.date(), exercise.name, type(exercise))
         if key not in summed:

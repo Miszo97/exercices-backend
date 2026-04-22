@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
-from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
+from src.dtos import ExerciseEntryAbstract, RepsExerciseEntry, dfs
 from src.utils import convert_seconds_to_minutes_format
 
 
@@ -14,7 +14,9 @@ def _format_exercise_cell(exercise_data: dict) -> str:
     return ""
 
 
-def get_table_data(exercises: List[ExerciseEntryAbstract]) -> Tuple[List[str], List[list]]:
+def get_table_data(
+    exercises: List[ExerciseEntryAbstract],
+) -> Tuple[List[str], List[list]]:
     if not exercises:
         return [], []
 
@@ -34,7 +36,9 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]) -> Tuple[List[str], L
 
     while current_date <= today:
         date_str = current_date.strftime("%Y-%m-%d")
-        grouped_by_date[date_str] = {name: {"reps": 0, "duration": 0} for name in exercise_names}
+        grouped_by_date[date_str] = {
+            name: {"reps": 0, "duration": 0} for name in exercise_names
+        }
         current_date += timedelta(days=1)
 
     # 4. Populate the data
@@ -43,11 +47,13 @@ def get_table_data(exercises: List[ExerciseEntryAbstract]) -> Tuple[List[str], L
 
         # In case an exercise date is somehow in the future beyond `today`
         if date_str not in grouped_by_date:
-            grouped_by_date[date_str] = {name: {"reps": 0, "duration": 0} for name in exercise_names}
+            grouped_by_date[date_str] = {
+                name: {"reps": 0, "duration": 0} for name in exercise_names
+            }
 
         if isinstance(exercise, RepsExerciseEntry):
             grouped_by_date[date_str][exercise.name]["reps"] += exercise.reps
-        elif isinstance(exercise, DurationExerciseEntry):
+        elif isinstance(exercise, dfs):
             grouped_by_date[date_str][exercise.name]["duration"] += exercise.duration
 
     # 5. Format the rows

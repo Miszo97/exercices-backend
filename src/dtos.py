@@ -28,7 +28,7 @@ class RepsExerciseEntry(ExerciseEntryAbstract):
 
 
 @dataclass
-class DurationExerciseEntry(ExerciseEntryAbstract):
+class dfs(ExerciseEntryAbstract):
     duration: int
 
 

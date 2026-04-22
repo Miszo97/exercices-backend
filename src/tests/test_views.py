@@ -24,6 +24,8 @@ def test_read_today_json(session):
     response = client.get("/today")
     assert response.status_code == 200
     assert response.json() == {
-        "push ups": 45,
-        "plank": 80,
+        "exercises": {
+            "push ups": 45,
+            "plank": 80,
+        }
     }

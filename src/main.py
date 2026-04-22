@@ -8,10 +8,21 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import JSONResponse
 
 from src.database_models import get_session
-from src.dtos import DurationExerciseInput, RepsExerciseInput
+from src.dtos import (
+    AddExerciseResponse,
+    AddedDurationExerciseResponse,
+    AddedRepsExerciseResponse,
+    DurationExerciseInput,
+    DurationExerciseStats,
+    ExerciseHistoryEntry,
+    ExercisesDaySumOutput,
+    RepsExerciseInput,
+    RepsExerciseStats,
+    StatusResponse,
+    TodaySummaryResponse,
+)
 from src.exercises_service import ExerciseService
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
@@ -46,6 +57,7 @@ async def read_root(
     request: Request,
     service: ExerciseService = Depends(get_service),
 ):
+    """Render an HTML table of the latest exercises."""
     result = service.fetch_exercises(limit=10000)
     exercise_names, rows = get_table_data(exercises=result)
     return templates.TemplateResponse(
@@ -61,75 +73,86 @@ async def check_access_key(request: Request):
     raise HTTPException(status_code=401, detail="Invalid access key")
 
 
-@app.post("/reps", dependencies=[Depends(check_access_key)])
+@app.post("/reps", response_model=AddExerciseResponse, dependencies=[Depends(check_access_key)])
 async def add_reps_exercise_post(
     data: RepsExerciseInput,
     service: ExerciseService = Depends(get_service),
 ):
+    """Add a reps-based exercise entry."""
     request = AddRepsExercisesRequest(name=data.name, reps=data.reps)
     result = service.add_reps_exercise(request=request)
-    return {"status": "ok", "data": result}
+    return AddExerciseResponse(data=AddedRepsExerciseResponse(**result))
 
 
-@app.post("/duration", dependencies=[Depends(check_access_key)])
+@app.post("/duration", response_model=AddExerciseResponse, dependencies=[Depends(check_access_key)])
 async def add_duration_exercise_post(
     data: DurationExerciseInput,
     service: ExerciseService = Depends(get_service),
 ):
+    """Add a duration-based exercise entry."""
     request = AddDurationExercisesRequest(name=data.name, duration=data.duration)
     result = service.add_duration_exercise(request=request)
-    return {"status": "ok", "data": result}
+    return AddExerciseResponse(data=AddedDurationExerciseResponse(**result))
 
 
-@app.get("/today")
+@app.get("/today", response_model=TodaySummaryResponse)
 async def read_today_json(
     service: ExerciseService = Depends(get_service),
 ):
+    """Return today's exercise totals grouped by exercise name."""
     cest = pytz.timezone("Europe/Warsaw")
     result = service.sum_exercises_for_day(day=datetime.now(cest).date())
-    return JSONResponse(content=result)
+    return TodaySummaryResponse(exercises=result)
 
 
-@app.get("/exercises")
+@app.get("/exercises", response_model=ExercisesDaySumOutput)
 async def read_json(
     limit: int = Query(1000, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     last_days: int = Query(0, ge=0),
     service: ExerciseService = Depends(get_service),
 ):
+    """Return exercises aggregated by day, with optional pagination and date filtering."""
     result = service.fetch_exercises(
         limit=limit, offset=offset, last_days=last_days or None
     )
-    result = sum_exercises(result)
-    return JSONResponse(content=result.model_dump())
+    return sum_exercises(result)
 
 
-@app.get("/exercises/{exercise_name}")
+@app.get("/exercises/{exercise_name}", response_model=list[ExerciseHistoryEntry])
 async def get_exercise_history(
     exercise_name: str,
     last_days: int = Query(0, ge=0),
     service: ExerciseService = Depends(get_service),
 ):
+    """Return day-summed history for a specific exercise."""
     data = service.get_exercise_history(name=exercise_name, last_days=last_days or None)
-    return JSONResponse(content=data)
+    return data
 
 
 @app.get("/")
 async def root(request: Request):
+    """Return the current access token from cookies."""
     return request.cookies.get("access_token")
 
 
-@app.get("/exercises/{exercise_name}/stats")
+@app.get(
+    "/exercises/{exercise_name}/stats",
+    response_model=RepsExerciseStats | DurationExerciseStats,
+)
 async def get_exercise_stats_view(
     exercise_name: str, service: ExerciseService = Depends(get_service)
 ):
-    stats = service.get_exercise_stats(name=exercise_name)
-    return JSONResponse(content=stats.model_dump())
+    """Return aggregate statistics for a specific exercise."""
+    return service.get_exercise_stats(name=exercise_name)
 
 
-@app.post("/api/set_auth_token/")
+@app.post("/api/set_auth_token/", response_model=StatusResponse)
 async def set_auth_token_view(password: Annotated[str, Form()]):
-    response = JSONResponse(content={"status": "ok"})
+    """Set an authentication token cookie."""
+    from starlette.responses import JSONResponse
+
+    response = JSONResponse(content=StatusResponse().model_dump())
     response.set_cookie(
         key="access_token",
         value=password,
@@ -142,6 +165,7 @@ async def set_auth_token_view(password: Annotated[str, Form()]):
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_form():
+    """Render a simple login form."""
     return """
     <form action="/api/set_auth_token/" method="post">
         <label>Password: <input type="password" name="password"></label>

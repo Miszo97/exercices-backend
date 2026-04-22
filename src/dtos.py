@@ -76,3 +76,51 @@ class RepsExerciseStats(BaseModel):
 class DurationExerciseStats(BaseModel):
     total_duration: int | None = None
     duration_in_last_30_days: int | None = None
+
+
+class AddedRepsExerciseResponse(BaseModel):
+    """Response after adding a reps-based exercise."""
+
+    id: int
+    date: datetime
+    name: str
+    reps: int
+    type: str = "reps"
+
+
+class AddedDurationExerciseResponse(BaseModel):
+    """Response after adding a duration-based exercise."""
+
+    id: int
+    date: datetime
+    name: str
+    duration: int
+    type: str = "duration"
+
+
+class AddExerciseResponse(BaseModel):
+    """Wrapper response for exercise creation endpoints."""
+
+    status: str = "ok"
+    data: AddedRepsExerciseResponse | AddedDurationExerciseResponse
+
+
+class TodaySummaryResponse(BaseModel):
+    """Summary of exercises performed today, mapping exercise name to total value."""
+
+    exercises: dict[str, int]
+
+
+class ExerciseHistoryEntry(BaseModel):
+    """A single day-summed exercise entry in history."""
+
+    date: str
+    name: str
+    reps: int | None = None
+    duration: int | None = None
+
+
+class StatusResponse(BaseModel):
+    """Generic status response."""
+
+    status: str = "ok"

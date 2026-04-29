@@ -169,15 +169,6 @@ async def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-def test_exercise_endpoint():
-    from fastapi.testclient import TestClient
-
-    client = TestClient(app)
-    response = client.get("/exercises")
-    assert response.status_code == 200
-    assert "exercises" in response.json()
-
-
 if __name__ == "__main__":
     import uvicorn
 

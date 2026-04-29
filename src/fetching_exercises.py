@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List
+from typing import List, TypeAlias, TypeGuard
 
 from src.dtos import (
     DurationExerciseDaySum,
@@ -12,32 +12,64 @@ from src.dtos import (
 )
 
 
+SupportedExerciseEntry: TypeAlias = RepsExerciseEntry | dfs
+ExerciseSumKey: TypeAlias = tuple[date, str, type[ExerciseEntryAbstract]]
+
+
+def _is_supported_exercise(
+        exercise: ExerciseEntryAbstract,
+) -> TypeGuard[SupportedExerciseEntry]:
+    return isinstance(exercise, (RepsExerciseEntry, dfs))
+
+
+def _exercise_sum_key(exercise: SupportedExerciseEntry) -> ExerciseSumKey:
+    return exercise.date.date(), exercise.name, type(exercise)
+
+
+def _empty_day_sum_for(exercise: SupportedExerciseEntry) -> ExerciseDaySumAbstract:
+    exercise_date = exercise.date.date()
+
+    if isinstance(exercise, RepsExerciseEntry):
+        return RepsExerciseDaySum(date=exercise_date, name=exercise.name, reps=0)
+
+    return DurationExerciseDaySum(
+        date=exercise_date,
+        name=exercise.name,
+        duration=0,
+    )
+
+
+def _add_to_day_sum(
+        day_sum: ExerciseDaySumAbstract,
+        exercise: SupportedExerciseEntry,
+) -> None:
+    if isinstance(exercise, RepsExerciseEntry) and isinstance(day_sum, RepsExerciseDaySum):
+        day_sum.reps = (day_sum.reps or 0) + exercise.reps
+        return
+
+    if isinstance(exercise, dfs) and isinstance(day_sum, DurationExerciseDaySum):
+        day_sum.duration = (day_sum.duration or 0) + exercise.duration
+        return
+
+    raise TypeError("Exercise entry and day sum types do not match")
+
+
 def sum_exercises(
-    exercises: List[ExerciseEntryAbstract],
+        exercises: List[ExerciseEntryAbstract],
 ) -> ExercisesDaySumOutput:
-    summed: dict[tuple[date, str, type], ExerciseDaySumAbstract] = {}
-    order: list[tuple[date, str, type]] = []
+    summed: dict[ExerciseSumKey, ExerciseDaySumAbstract] = {}
+    order: list[ExerciseSumKey] = []
 
     for exercise in exercises:
-        if not isinstance(exercise, (RepsExerciseEntry, dfs)):
+        if not _is_supported_exercise(exercise):
             continue
-        key = (exercise.date.date(), exercise.name, type(exercise))
+
+        key = _exercise_sum_key(exercise)
+
         if key not in summed:
-            if isinstance(exercise, RepsExerciseEntry):
-                summed[key] = RepsExerciseDaySum(
-                    date=exercise.date.date(), name=exercise.name, reps=0
-                )
-            else:
-                summed[key] = DurationExerciseDaySum(
-                    date=exercise.date.date(),
-                    name=exercise.name,
-                    duration=0,
-                )
+            summed[key] = _empty_day_sum_for(exercise)
             order.append(key)
 
-        if isinstance(exercise, RepsExerciseEntry):
-            summed[key].reps += exercise.reps
-        else:
-            summed[key].duration += exercise.duration
+        _add_to_day_sum(summed[key], exercise)
 
-    return ExercisesDaySumOutput(exercises=[summed[k] for k in order])
+    return ExercisesDaySumOutput(exercises=[summed[key] for key in order])

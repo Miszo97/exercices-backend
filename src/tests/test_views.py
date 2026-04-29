@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from database_models import DurationExerciseEntry, RepsExerciseEntry
 from exercises_sources.sql import SQLExerciseSource
+from main import app
 from src.main import app
 
 client = TestClient(app)
@@ -29,3 +30,12 @@ def test_read_today_json(session):
             "plank": 80,
         }
     }
+
+
+def test_exercise_endpoint():
+    from fastapi.testclient import TestClient
+
+    client = TestClient(app)
+    response = client.get("/exercises")
+    assert response.status_code == 200
+    assert "exercises" in response.json()

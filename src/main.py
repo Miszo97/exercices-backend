@@ -11,9 +11,9 @@ from starlette.middleware.cors import CORSMiddleware
 
 from src.database_models import get_session
 from src.dtos import (
-    AddExerciseResponse,
     AddedDurationExerciseResponse,
     AddedRepsExerciseResponse,
+    AddExerciseResponse,
     DurationExerciseInput,
     DurationExerciseStats,
     ExerciseHistoryEntry,
@@ -61,8 +61,9 @@ async def read_root(
     result = service.fetch_exercises(limit=10000)
     exercise_names, rows = get_table_data(exercises=result)
     return templates.TemplateResponse(
+        request,
         "exercise_table.html",
-        {"request": request, "exercise_names": exercise_names, "rows": rows},
+        {"exercise_names": exercise_names, "rows": rows},
     )
 
 
@@ -73,7 +74,11 @@ async def check_access_key(request: Request):
     raise HTTPException(status_code=401, detail="Invalid access key")
 
 
-@app.post("/reps", response_model=AddExerciseResponse, dependencies=[Depends(check_access_key)])
+@app.post(
+    "/reps",
+    response_model=AddExerciseResponse,
+    dependencies=[Depends(check_access_key)],
+)
 async def add_reps_exercise_post(
     data: RepsExerciseInput,
     service: ExerciseService = Depends(get_service),
@@ -84,7 +89,11 @@ async def add_reps_exercise_post(
     return AddExerciseResponse(data=AddedRepsExerciseResponse(**result))
 
 
-@app.post("/duration", response_model=AddExerciseResponse, dependencies=[Depends(check_access_key)])
+@app.post(
+    "/duration",
+    response_model=AddExerciseResponse,
+    dependencies=[Depends(check_access_key)],
+)
 async def add_duration_exercise_post(
     data: DurationExerciseInput,
     service: ExerciseService = Depends(get_service),
@@ -166,7 +175,7 @@ async def set_auth_token_view(password: Annotated[str, Form()]):
 @app.get("/login", response_class=HTMLResponse)
 async def login_form(request: Request):
     """Render a simple login form."""
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html")
 
 
 def test_exercise_endpoint():

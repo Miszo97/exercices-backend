@@ -77,7 +77,6 @@ async def check_access_key(request: Request):
 @app.post(
     "/reps",
     response_model=AddExerciseResponse,
-    dependencies=[Depends(check_access_key)],
 )
 async def add_reps_exercise_post(
     data: RepsExerciseInput,

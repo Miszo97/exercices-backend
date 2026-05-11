@@ -1,0 +1,23 @@
+GET {{host}}/today
+
+
+
+
+### Send POST request with json body
+POST {{host}}/duration
+Content-Type: application/json
+
+{
+  "name": "plank",
+  "duration": 60
+}
+
+
+### Send POST request with json body
+POST {{host}}/reps
+Content-Type: application/json
+
+{
+  "name": "biceps curls",
+  "reps": 10
+}

@@ -91,7 +91,7 @@ async def add_reps_exercise_post(
 @app.post(
     "/duration",
     response_model=AddExerciseResponse,
-    # dependencies=[Depends(check_access_key)],
+    # dependencies=[Depends(check_access_key)], #TODO Enable
 )
 async def add_duration_exercise_post(
     data: DurationExerciseInput,

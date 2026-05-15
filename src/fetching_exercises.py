@@ -2,24 +2,24 @@ from datetime import date
 from typing import List, TypeAlias, TypeGuard
 
 from src.dtos import (
+    DurationExerciseEntry,
     DurationExerciseDaySum,
     ExerciseDaySumAbstract,
     ExerciseEntryAbstract,
     ExercisesDaySumOutput,
     RepsExerciseDaySum,
     RepsExerciseEntry,
-    dfs,
 )
 
 
-SupportedExerciseEntry: TypeAlias = RepsExerciseEntry | dfs
+SupportedExerciseEntry: TypeAlias = RepsExerciseEntry | DurationExerciseEntry
 ExerciseSumKey: TypeAlias = tuple[date, str, type[ExerciseEntryAbstract]]
 
 
 def _is_supported_exercise(
         exercise: ExerciseEntryAbstract,
 ) -> TypeGuard[SupportedExerciseEntry]:
-    return isinstance(exercise, (RepsExerciseEntry, dfs))
+    return isinstance(exercise, (RepsExerciseEntry, DurationExerciseEntry))
 
 
 def _exercise_sum_key(exercise: SupportedExerciseEntry) -> ExerciseSumKey:
@@ -47,7 +47,9 @@ def _add_to_day_sum(
         day_sum.reps = (day_sum.reps or 0) + exercise.reps
         return
 
-    if isinstance(exercise, dfs) and isinstance(day_sum, DurationExerciseDaySum):
+    if isinstance(exercise, DurationExerciseEntry) and isinstance(
+        day_sum, DurationExerciseDaySum
+    ):
         day_sum.duration = (day_sum.duration or 0) + exercise.duration
         return
 

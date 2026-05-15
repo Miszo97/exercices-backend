@@ -42,3 +42,4 @@ compose.env
 compose.*.env
 
 /http-client.env.json
+/.junie/

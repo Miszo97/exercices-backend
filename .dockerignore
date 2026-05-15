@@ -2,3 +2,12 @@
 .vscode
 .idea
 .readmes
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+.zed
+.DS_Store
+.env
+.git
+.gitignore

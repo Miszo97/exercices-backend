@@ -1,6 +1,9 @@
+### Today
+@exercise_name = plank
 GET {{host}}/today
 
-
+### Get statistics for a given exercise
+GET {{host}}/exercises/{{exercise_name}}/stats
 
 
 ### Send POST request with json body
@@ -21,3 +24,10 @@ Content-Type: application/json
   "name": "biceps curls",
   "reps": 10
 }
+
+### Send POST to get auth token
+POST {{host}}/api/set_auth_token/
+Content-Type: application/x-www-form-urlencoded
+
+password=your_password_here
+

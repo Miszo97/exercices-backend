@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
-from src.dtos import ExerciseEntryAbstract, RepsExerciseEntry, dfs
+from src.dtos import DurationExerciseEntry, ExerciseEntryAbstract, RepsExerciseEntry
 from src.utils import convert_seconds_to_minutes_format
 
 
@@ -53,7 +53,7 @@ def get_table_data(
 
         if isinstance(exercise, RepsExerciseEntry):
             grouped_by_date[date_str][exercise.name]["reps"] += exercise.reps
-        elif isinstance(exercise, dfs):
+        elif isinstance(exercise, DurationExerciseEntry):
             grouped_by_date[date_str][exercise.name]["duration"] += exercise.duration
 
     # 5. Format the rows

@@ -15,11 +15,11 @@ from src.database_models import (
     get_engine,
 )
 from src.dtos import (
+    DurationExerciseEntry,
     DurationExerciseStats,
     ExerciseEntryAbstract,
     RepsExerciseEntry,
     RepsExerciseStats,
-    dfs,
 )
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
@@ -148,7 +148,11 @@ class SQLExerciseSource(ExerciseSource):
                     RepsExerciseEntry(date=r.date, name=r.name, reps=r.reps)
                 )
             for d in dur_rows:
-                exercises.append(dfs(date=d.date, name=d.name, duration=d.duration))
+                exercises.append(
+                    DurationExerciseEntry(
+                        date=d.date, name=d.name, duration=d.duration
+                    )
+                )
 
             exercises.sort(key=lambda x: x.date)
 
@@ -212,7 +216,11 @@ class SQLExerciseSource(ExerciseSource):
                     RepsExerciseEntry(date=r.date, name=r.name, reps=r.reps)
                 )
             for d in dur_rows:
-                exercises.append(dfs(date=d.date, name=d.name, duration=d.duration))
+                exercises.append(
+                    DurationExerciseEntry(
+                        date=d.date, name=d.name, duration=d.duration
+                    )
+                )
 
             exercises.sort(key=lambda x: x.date, reverse=True)
 

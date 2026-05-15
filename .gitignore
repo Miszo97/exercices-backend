@@ -40,3 +40,6 @@ coverage.xml
 # Docker Compose env files
 compose.env
 compose.*.env
+
+/http-client.env.json
+/.junie/

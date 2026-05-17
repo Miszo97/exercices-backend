@@ -37,11 +37,14 @@ def get_service():
     exercises_source = SQLExerciseSource()
     return ExerciseService(exercise_source=exercises_source)
 
+
 async def check_access_key(request: Request):
     access_key = request.headers.get("Authorization")
     if access_key == "my_strong_password":
         return True
     raise HTTPException(status_code=401, detail="Invalid access key")
+
+
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
 
@@ -56,12 +59,10 @@ app.add_middleware(
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
-
-
 @app.get("/table", response_class=HTMLResponse, dependencies=[Depends(check_access_key)])
 async def read_root(
-    request: Request,
-    service: ExerciseService = Depends(get_service),
+        request: Request,
+        service: ExerciseService = Depends(get_service),
 ):
     """Render an HTML table of the latest exercises."""
     result = service.fetch_exercises(limit=10000)
@@ -79,8 +80,8 @@ async def read_root(
     dependencies=[Depends(check_access_key)],
 )
 async def add_reps_exercise_post(
-    data: RepsExerciseInput,
-    service: ExerciseService = Depends(get_service),
+        data: RepsExerciseInput,
+        service: ExerciseService = Depends(get_service),
 ):
     """Add a reps-based exercise entry."""
     request = AddRepsExercisesRequest(name=data.name, reps=data.reps)
@@ -94,8 +95,8 @@ async def add_reps_exercise_post(
     dependencies=[Depends(check_access_key)],
 )
 async def add_duration_exercise_post(
-    data: DurationExerciseInput,
-    service: ExerciseService = Depends(get_service),
+        data: DurationExerciseInput,
+        service: ExerciseService = Depends(get_service),
 ):
     """Add a duration-based exercise entry."""
     request = AddDurationExercisesRequest(name=data.name, duration=data.duration)
@@ -105,7 +106,7 @@ async def add_duration_exercise_post(
 
 @app.get("/today", response_model=TodaySummaryResponse, dependencies=[Depends(check_access_key)])
 async def read_today_json(
-    service: ExerciseService = Depends(get_service),
+        service: ExerciseService = Depends(get_service),
 ):
     """Return today's exercise totals grouped by exercise name."""
     cest = pytz.timezone("Europe/Warsaw")
@@ -115,10 +116,10 @@ async def read_today_json(
 
 @app.get("/exercises", response_model=ExercisesDaySumOutput, dependencies=[Depends(check_access_key)])
 async def read_json(
-    limit: int = Query(1000, ge=1, le=1000),
-    offset: int = Query(0, ge=0),
-    last_days: int = Query(0, ge=0),
-    service: ExerciseService = Depends(get_service),
+        limit: int = Query(1000, ge=1, le=1000),
+        offset: int = Query(0, ge=0),
+        last_days: int = Query(0, ge=0),
+        service: ExerciseService = Depends(get_service),
 ):
     """Return exercises aggregated by day, with optional pagination and date filtering."""
     result = service.fetch_exercises(
@@ -127,11 +128,12 @@ async def read_json(
     return sum_exercises(result)
 
 
-@app.get("/exercises/{exercise_name}", response_model=list[ExerciseHistoryEntry], dependencies=[Depends(check_access_key)])
+@app.get("/exercises/{exercise_name}", response_model=list[ExerciseHistoryEntry],
+         dependencies=[Depends(check_access_key)])
 async def get_exercise_history(
-    exercise_name: str,
-    last_days: int = Query(0, ge=0),
-    service: ExerciseService = Depends(get_service),
+        exercise_name: str,
+        last_days: int = Query(0, ge=0),
+        service: ExerciseService = Depends(get_service),
 ):
     """Return day-summed history for a specific exercise."""
     data = service.get_exercise_history(name=exercise_name, last_days=last_days or None)
@@ -150,7 +152,7 @@ async def root(request: Request):
     dependencies=[Depends(check_access_key)],
 )
 async def get_exercise_stats_view(
-    exercise_name: str, service: ExerciseService = Depends(get_service)
+        exercise_name: str, service: ExerciseService = Depends(get_service)
 ):
     """Return aggregate statistics for a specific exercise."""
     return service.get_exercise_stats(name=exercise_name)

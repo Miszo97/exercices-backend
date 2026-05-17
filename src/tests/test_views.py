@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 
 from database_models import DurationExerciseEntry, RepsExerciseEntry
 from exercises_sources.sql import SQLExerciseSource
-from main import app
 from src.main import app
 
 client = TestClient(app)

@@ -1,6 +1,12 @@
 ### Today
 @exercise_name = plank
 GET {{host}}/today
+Authorization: my_strong_password
+
+### Table
+GET {{host}}/table
+Authorization: my_strong_password
+
 
 ### Get statistics for a given exercise
 GET {{host}}/exercises/{{exercise_name}}/stats
@@ -9,6 +15,7 @@ GET {{host}}/exercises/{{exercise_name}}/stats
 ### Send POST request with json body
 POST {{host}}/duration
 Content-Type: application/json
+Authorization: my_strong_password
 
 {
   "name": "plank",

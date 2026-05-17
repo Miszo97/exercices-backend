@@ -40,6 +40,8 @@ def get_service():
 
 async def check_access_key(request: Request):
     access_key = request.headers.get("Authorization")
+    if not access_key:
+        access_key = request.cookies.get("access_token")
     if access_key == "my_strong_password":
         return True
     raise HTTPException(status_code=401, detail="Invalid access key")

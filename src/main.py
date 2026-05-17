@@ -37,7 +37,11 @@ def get_service():
     exercises_source = SQLExerciseSource()
     return ExerciseService(exercise_source=exercises_source)
 
-
+async def check_access_key(request: Request):
+    access_key = request.headers.get("Authorization")
+    if access_key == "my_strong_password":
+        return True
+    raise HTTPException(status_code=401, detail="Invalid access key")
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
 
@@ -52,7 +56,9 @@ app.add_middleware(
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
-@app.get("/table", response_class=HTMLResponse)
+
+
+@app.get("/table", response_class=HTMLResponse, dependencies=[Depends(check_access_key)])
 async def read_root(
     request: Request,
     service: ExerciseService = Depends(get_service),
@@ -67,16 +73,10 @@ async def read_root(
     )
 
 
-async def check_access_key(request: Request):
-    access_key = request.headers.get("Authorization")
-    if access_key == "my_strong_password":
-        return True
-    raise HTTPException(status_code=401, detail="Invalid access key")
-
-
 @app.post(
     "/reps",
     response_model=AddExerciseResponse,
+    dependencies=[Depends(check_access_key)],
 )
 async def add_reps_exercise_post(
     data: RepsExerciseInput,
@@ -91,7 +91,7 @@ async def add_reps_exercise_post(
 @app.post(
     "/duration",
     response_model=AddExerciseResponse,
-    # dependencies=[Depends(check_access_key)], #TODO Enable
+    dependencies=[Depends(check_access_key)],
 )
 async def add_duration_exercise_post(
     data: DurationExerciseInput,
@@ -103,7 +103,7 @@ async def add_duration_exercise_post(
     return AddExerciseResponse(data=AddedDurationExerciseResponse(**result))
 
 
-@app.get("/today", response_model=TodaySummaryResponse)
+@app.get("/today", response_model=TodaySummaryResponse, dependencies=[Depends(check_access_key)])
 async def read_today_json(
     service: ExerciseService = Depends(get_service),
 ):
@@ -113,7 +113,7 @@ async def read_today_json(
     return TodaySummaryResponse(exercises=result)
 
 
-@app.get("/exercises", response_model=ExercisesDaySumOutput)
+@app.get("/exercises", response_model=ExercisesDaySumOutput, dependencies=[Depends(check_access_key)])
 async def read_json(
     limit: int = Query(1000, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -127,7 +127,7 @@ async def read_json(
     return sum_exercises(result)
 
 
-@app.get("/exercises/{exercise_name}", response_model=list[ExerciseHistoryEntry])
+@app.get("/exercises/{exercise_name}", response_model=list[ExerciseHistoryEntry], dependencies=[Depends(check_access_key)])
 async def get_exercise_history(
     exercise_name: str,
     last_days: int = Query(0, ge=0),
@@ -147,6 +147,7 @@ async def root(request: Request):
 @app.get(
     "/exercises/{exercise_name}/stats",
     response_model=RepsExerciseStats | DurationExerciseStats,
+    dependencies=[Depends(check_access_key)],
 )
 async def get_exercise_stats_view(
     exercise_name: str, service: ExerciseService = Depends(get_service)

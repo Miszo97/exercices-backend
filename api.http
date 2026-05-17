@@ -29,5 +29,5 @@ Content-Type: application/json
 POST {{host}}/api/set_auth_token/
 Content-Type: application/x-www-form-urlencoded
 
-password=your_password_here
+password=my_strong_password
 

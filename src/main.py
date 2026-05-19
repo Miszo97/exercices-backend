@@ -1,6 +1,9 @@
 import os
 from datetime import datetime
 from typing import Annotated
+import hashlib
+from dotenv import load_dotenv
+load_dotenv()
 
 import pytz
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
@@ -38,14 +41,15 @@ def get_service():
     return ExerciseService(exercise_source=exercises_source)
 
 
+
 async def check_access_key(request: Request):
     access_key = request.headers.get("Authorization")
     if not access_key:
         access_key = request.cookies.get("access_token")
-    if access_key == "my_strong_password":
+    hashed = hashlib.sha256(access_key.encode()).hexdigest() if access_key else ""
+    if hashed == os.environ["ACCESS_KEY_HASH"]:
         return True
     raise HTTPException(status_code=401, detail="Invalid access key")
-
 
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")

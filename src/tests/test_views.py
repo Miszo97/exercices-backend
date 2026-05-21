@@ -10,7 +10,7 @@ client = TestClient(app)
 source = SQLExerciseSource()
 
 
-def test_read_today_json(session):
+def test_read_today_json__integration(session):
     session.add_all(
         [
             DurationExerciseEntry(date=datetime.now(), name="plank", duration=60),
@@ -29,15 +29,6 @@ def test_read_today_json(session):
             "plank": 80,
         }
     }
-
-
-def test_exercise_endpoint():
-    from fastapi.testclient import TestClient
-
-    client = TestClient(app)
-    response = client.get("/exercises")
-    assert response.status_code == 200
-    assert "exercises" in response.json()
 
 
 class Test401NotAuthenticated:

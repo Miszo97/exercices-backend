@@ -1,11 +1,13 @@
 ### Today
 @exercise_name = plank
+
+
 GET {{host}}/today
-Authorization: my_strong_password
+Authorization: {{auth_token}}
 
 ### Table
 GET {{host}}/table
-Authorization: my_strong_password
+Authorization: {{auth_token}}
 
 
 ### Get statistics for a given exercise
@@ -15,10 +17,10 @@ GET {{host}}/exercises/{{exercise_name}}/stats
 ### Send POST request with json body
 POST {{host}}/duration
 Content-Type: application/json
-Authorization: my_strong_password
+Authorization: {{auth_token}}
 
 {
-  "name": "plank",
+  "name": "plank both sides",
   "duration": 60
 }
 
@@ -26,6 +28,7 @@ Authorization: my_strong_password
 ### Send POST request with json body
 POST {{host}}/reps
 Content-Type: application/json
+Authorization: {{auth_token}}
 
 {
   "name": "biceps curls",
@@ -37,4 +40,3 @@ POST {{host}}/api/set_auth_token/
 Content-Type: application/x-www-form-urlencoded
 
 password=my_strong_password
-

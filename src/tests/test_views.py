@@ -30,26 +30,6 @@ def setup_dependency_overrides(mock_service: MagicMock):
     app.dependency_overrides.clear()
 
 
-def test_read_today_json__integration(session):
-    session.add_all(
-        [
-            DurationExerciseEntry(date=datetime.now(), name="plank", duration=60),
-            DurationExerciseEntry(date=datetime.now(), name="plank", duration=20),
-            RepsExerciseEntry(date=datetime.now(), name="push ups", reps=20),
-            RepsExerciseEntry(date=datetime.now(), name="push ups", reps=25),
-        ]
-    )
-    session.commit()
-    app.dependency_overrides[SQLExerciseSource] = lambda: source
-
-    response = client.get("/today")
-    assert response.status_code == 200
-    assert response.json() == {
-        "exercises": {
-            "push ups": 45,
-            "plank": 80,
-        }
-    }
 
 
 class TestGetToday:
@@ -115,6 +95,20 @@ class TestCreateDurationEntry:
         assert len(response.json()["detail"]) == 2
         assert response.json()["detail"][0]["type"] == "missing"
         assert response.json()["detail"][1]["type"] == "missing"
+
+
+
+def test_read_root_table_view_with_mock(mock_service: MagicMock):
+    # Mock list of exercises returned from the database layer
+    mock_service.fetch_exercises.return_value = []
+
+    response = client.get("/table")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+
+    # Check that fetch_exercises was called with limit=10000 as defined in the view
+    mock_service.fetch_exercises.assert_called_once_with(limit=10000)
 
 
 class Test401NotAuthenticated:

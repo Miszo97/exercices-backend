@@ -84,6 +84,39 @@ class TestGetToday:
         mock_service.sum_exercises_for_day.assert_called_once()
 
 
+class TestCreateDurationEntry:
+    def test_post(self, mock_service: MagicMock):
+        now = datetime.now()
+        mock_service.add_duration_exercise.return_value = {
+            "id": 1,
+            "date": now,
+            "name": "plank",
+            "duration": 60
+        }
+
+        response = client.post("/duration", json={"name": "plank", "duration": 60})
+
+        assert response.status_code == 200
+        assert response.json() == {
+            'data': {
+                'date': now.isoformat(),
+                'duration': 60,
+                'id': 1,
+                'name': 'plank',
+                'type': 'duration',
+            },
+            'status': 'ok',
+        }
+        mock_service.add_duration_exercise.assert_called_once()
+
+    def test_post_400(self, mock_service: MagicMock):
+        response = client.post("/duration", json={"nam": "plank", "dura": 60})
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 2
+        assert response.json()["detail"][0]["type"] == "missing"
+        assert response.json()["detail"][1]["type"] == "missing"
+
+
 class Test401NotAuthenticated:
     def test_unauthenticated_table(self):
         response = client.get("/table")

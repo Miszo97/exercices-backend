@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 
 from database_models import DurationExerciseEntry, RepsExerciseEntry
-from dtos import ExerciseHistoryEntry
+from dtos import ExerciseHistoryEntry, RepsExerciseStats, DurationExerciseStats
 from exercises_sources.sql import SQLExerciseSource
 from src.main import app
 
@@ -154,7 +154,6 @@ def test_get_exercise_history(mock_service: MagicMock):
 
 
 def test_read_root_table_view_with_mock(mock_service: MagicMock):
-    # Mock list of exercises returned from the database layer
     mock_service.fetch_exercises.return_value = []
 
     response = client.get("/table")
@@ -164,6 +163,40 @@ def test_read_root_table_view_with_mock(mock_service: MagicMock):
 
     # Check that fetch_exercises was called with limit=10000 as defined in the view
     mock_service.fetch_exercises.assert_called_once_with(limit=10000)
+
+
+class TestGetExerciseStats:
+    def test_reps_stats(self, mock_service: MagicMock):
+        mock_service.get_exercise_stats.return_value = RepsExerciseStats(
+            total_reps=150,
+            reps_in_last_30_days=50
+        )
+        response = client.get("/exercises/push ups/stats")
+        assert response.status_code == 200
+        assert response.json() == {
+            "total_reps": 150,
+            "reps_in_last_30_days": 50
+        }
+        mock_service.get_exercise_stats.assert_called_once_with(name="push ups")
+
+    def test_duration_stats(self, mock_service: MagicMock):
+        mock_service.get_exercise_stats.return_value = DurationExerciseStats(
+            total_duration=3600,
+            duration_in_last_30_days=600
+        )
+        response = client.get("/exercises/plank/stats")
+        assert response.status_code == 200
+        assert response.json() == {
+            "total_duration": 3600,
+            "duration_in_last_30_days": 600
+        }
+        mock_service.get_exercise_stats.assert_called_once_with(name="plank")
+
+    def test_stats_none(self, mock_service: MagicMock):
+        mock_service.get_exercise_stats.return_value = None
+        response = client.get("/exercises/unknown/stats")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Exercise stats not found"
 
 
 class Test401NotAuthenticated:

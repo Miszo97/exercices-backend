@@ -2,10 +2,12 @@ from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 
-from database_models import DurationExerciseEntry, RepsExerciseEntry
 from dtos import ExerciseHistoryEntry, RepsExerciseStats, DurationExerciseStats
 from exercises_sources.sql import SQLExerciseSource
 from src.main import app
+from src.dtos import (
+    DurationExerciseEntry,
+    RepsExerciseDaySum)
 
 client = TestClient(app)
 source = SQLExerciseSource()
@@ -197,6 +199,26 @@ class TestGetExerciseStats:
         response = client.get("/exercises/unknown/stats")
         assert response.status_code == 404
         assert response.json()["detail"] == "Exercise stats not found"
+
+
+class TestGetExercises:
+    def test_get_exercises(self, mock_service: MagicMock):
+        mock_service.fetch_exercises.return_value = [
+            DurationExerciseEntry(name="plank", duration=60, date=datetime.now()),
+            RepsExerciseDaySum(name="push ups", reps=10, date=datetime.now()),
+        ]
+        response = client.get("/exercises")
+        assert response.status_code == 200
+        assert response.json() == {
+            "exercises": [
+                {
+                    'date': datetime.now().date().isoformat(),
+                    'duration': 60,
+                    'name': 'plank',
+                    'reps': None,
+                },
+            ],
+        }
 
 
 class Test401NotAuthenticated:

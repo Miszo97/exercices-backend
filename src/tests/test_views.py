@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 
 from database_models import DurationExerciseEntry, RepsExerciseEntry
+from dtos import ExerciseHistoryEntry
 from exercises_sources.sql import SQLExerciseSource
 from src.main import app
 
@@ -28,8 +29,6 @@ def setup_dependency_overrides(mock_service: MagicMock):
     yield
 
     app.dependency_overrides.clear()
-
-
 
 
 class TestGetToday:
@@ -96,6 +95,62 @@ class TestCreateDurationEntry:
         assert response.json()["detail"][0]["type"] == "missing"
         assert response.json()["detail"][1]["type"] == "missing"
 
+
+class TestCreateRepsEntry:
+    def test_post(self, mock_service: MagicMock):
+        now = datetime.now()
+        mock_service.add_reps_exercise.return_value = {
+            "id": 1,
+            "date": now,
+            "name": "push ups",
+            "reps": 10
+        }
+
+        response = client.post("/reps", json={"name": "push ups", "reps": 10})
+
+        assert response.status_code == 200
+        assert response.json() == {
+            'data': {
+                'date': now.isoformat(),
+                'reps': 10,
+                'id': 1,
+                'name': 'push ups',
+                'type': 'reps',
+            },
+            'status': 'ok',
+        }
+        mock_service.add_reps_exercise.assert_called_once()
+
+    def test_post_400(self, mock_service: MagicMock):
+        response = client.post("/reps", json={"nam": "push ups", "rep": 10})
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 2
+        assert response.json()["detail"][0]["type"] == "missing"
+        assert response.json()["detail"][1]["type"] == "missing"
+
+
+def test_get_exercise_history(mock_service: MagicMock):
+    now_str = datetime.now().isoformat()
+    mock_service.get_exercise_history.return_value = [
+        ExerciseHistoryEntry(name="push ups", reps=10, date=now_str),
+        ExerciseHistoryEntry(name="push ups", reps=15, date=now_str),
+    ]
+    response = client.get("/exercises/push ups")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "date": now_str,
+            "name": "push ups",
+            "reps": 10,
+            "duration": None
+        },
+        {
+            "date": now_str,
+            "name": "push ups",
+            "reps": 15,
+            "duration": None
+        }
+    ]
 
 
 def test_read_root_table_view_with_mock(mock_service: MagicMock):

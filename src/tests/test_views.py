@@ -1,10 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 
-from database_models import DurationExerciseEntry, RepsExerciseEntry
+from dtos import ExerciseHistoryEntry, RepsExerciseStats, DurationExerciseStats
 from exercises_sources.sql import SQLExerciseSource
 from src.main import app
+from src.dtos import (
+    DurationExerciseEntry,
+    RepsExerciseDaySum)
 
 client = TestClient(app)
 source = SQLExerciseSource()
@@ -28,8 +31,6 @@ def setup_dependency_overrides(mock_service: MagicMock):
     yield
 
     app.dependency_overrides.clear()
-
-
 
 
 class TestGetToday:
@@ -97,9 +98,64 @@ class TestCreateDurationEntry:
         assert response.json()["detail"][1]["type"] == "missing"
 
 
+class TestCreateRepsEntry:
+    def test_post(self, mock_service: MagicMock):
+        now = datetime.now()
+        mock_service.add_reps_exercise.return_value = {
+            "id": 1,
+            "date": now,
+            "name": "push ups",
+            "reps": 10
+        }
+
+        response = client.post("/reps", json={"name": "push ups", "reps": 10})
+
+        assert response.status_code == 200
+        assert response.json() == {
+            'data': {
+                'date': now.isoformat(),
+                'reps': 10,
+                'id': 1,
+                'name': 'push ups',
+                'type': 'reps',
+            },
+            'status': 'ok',
+        }
+        mock_service.add_reps_exercise.assert_called_once()
+
+    def test_post_400(self, mock_service: MagicMock):
+        response = client.post("/reps", json={"nam": "push ups", "rep": 10})
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 2
+        assert response.json()["detail"][0]["type"] == "missing"
+        assert response.json()["detail"][1]["type"] == "missing"
+
+
+def test_get_exercise_history(mock_service: MagicMock):
+    now_str = datetime.now().isoformat()
+    mock_service.get_exercise_history.return_value = [
+        ExerciseHistoryEntry(name="push ups", reps=10, date=now_str),
+        ExerciseHistoryEntry(name="push ups", reps=15, date=now_str),
+    ]
+    response = client.get("/exercises/push ups")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "date": now_str,
+            "name": "push ups",
+            "reps": 10,
+            "duration": None
+        },
+        {
+            "date": now_str,
+            "name": "push ups",
+            "reps": 15,
+            "duration": None
+        }
+    ]
+
 
 def test_read_root_table_view_with_mock(mock_service: MagicMock):
-    # Mock list of exercises returned from the database layer
     mock_service.fetch_exercises.return_value = []
 
     response = client.get("/table")
@@ -109,6 +165,60 @@ def test_read_root_table_view_with_mock(mock_service: MagicMock):
 
     # Check that fetch_exercises was called with limit=10000 as defined in the view
     mock_service.fetch_exercises.assert_called_once_with(limit=10000)
+
+
+class TestGetExerciseStats:
+    def test_reps_stats(self, mock_service: MagicMock):
+        mock_service.get_exercise_stats.return_value = RepsExerciseStats(
+            total_reps=150,
+            reps_in_last_30_days=50
+        )
+        response = client.get("/exercises/push ups/stats")
+        assert response.status_code == 200
+        assert response.json() == {
+            "total_reps": 150,
+            "reps_in_last_30_days": 50
+        }
+        mock_service.get_exercise_stats.assert_called_once_with(name="push ups")
+
+    def test_duration_stats(self, mock_service: MagicMock):
+        mock_service.get_exercise_stats.return_value = DurationExerciseStats(
+            total_duration=3600,
+            duration_in_last_30_days=600
+        )
+        response = client.get("/exercises/plank/stats")
+        assert response.status_code == 200
+        assert response.json() == {
+            "total_duration": 3600,
+            "duration_in_last_30_days": 600
+        }
+        mock_service.get_exercise_stats.assert_called_once_with(name="plank")
+
+    def test_stats_none(self, mock_service: MagicMock):
+        mock_service.get_exercise_stats.return_value = None
+        response = client.get("/exercises/unknown/stats")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Exercise stats not found"
+
+
+class TestGetExercises:
+    def test_get_exercises(self, mock_service: MagicMock):
+        mock_service.fetch_exercises.return_value = [
+            DurationExerciseEntry(name="plank", duration=60, date=datetime.now()),
+            RepsExerciseDaySum(name="push ups", reps=10, date=datetime.now()),
+        ]
+        response = client.get("/exercises")
+        assert response.status_code == 200
+        assert response.json() == {
+            "exercises": [
+                {
+                    'date': datetime.now().date().isoformat(),
+                    'duration': 60,
+                    'name': 'plank',
+                    'reps': None,
+                },
+            ],
+        }
 
 
 class Test401NotAuthenticated:

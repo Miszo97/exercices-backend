@@ -161,7 +161,10 @@ async def get_exercise_stats_view(
         exercise_name: str, service: ExerciseService = Depends(get_service)
 ):
     """Return aggregate statistics for a specific exercise."""
-    return service.get_exercise_stats(name=exercise_name)
+    result = service.get_exercise_stats(name=exercise_name)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Exercise stats not found")
+    return result
 
 
 @app.post("/api/set_auth_token/", response_model=StatusResponse)

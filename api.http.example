@@ -20,7 +20,7 @@ Content-Type: application/json
 Authorization: {{auth_token}}
 
 {
-  "name": "plank both sides",
+  "name": "plank",
   "duration": 60
 }
 
@@ -31,8 +31,8 @@ Content-Type: application/json
 Authorization: {{auth_token}}
 
 {
-  "name": "biceps curls",
-  "reps": 10
+  "name": "push ups",
+  "reps": 20
 }
 
 ### Send POST to get auth token

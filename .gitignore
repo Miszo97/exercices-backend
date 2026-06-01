@@ -44,3 +44,4 @@ compose.*.env
 /http-client.env.json
 /.junie/
 /http-client.private.env.json
+/api.http

@@ -66,7 +66,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @app.get("/table", response_class=HTMLResponse, dependencies=[Depends(check_access_key)])
-async def read_root(
+async def get_table(
         request: Request,
         service: ExerciseService = Depends(get_service),
 ):
@@ -85,7 +85,7 @@ async def read_root(
     response_model=AddExerciseResponse,
     dependencies=[Depends(check_access_key)],
 )
-async def add_reps_exercise_post(
+async def create_reps_exercise(
         data: RepsExerciseInput,
         service: ExerciseService = Depends(get_service),
 ):
@@ -100,7 +100,7 @@ async def add_reps_exercise_post(
     response_model=AddExerciseResponse,
     dependencies=[Depends(check_access_key)],
 )
-async def add_duration_exercise_post(
+async def create_duration_exercise(
         data: DurationExerciseInput,
         service: ExerciseService = Depends(get_service),
 ):
@@ -111,7 +111,7 @@ async def add_duration_exercise_post(
 
 
 @app.get("/today", response_model=TodaySummaryResponse, dependencies=[Depends(check_access_key)])
-async def read_today_json(
+async def get_today_summary(
         service: ExerciseService = Depends(get_service),
 ):
     """Return today's exercise totals grouped by exercise name."""
@@ -121,7 +121,7 @@ async def read_today_json(
 
 
 @app.get("/exercises", response_model=ExercisesDaySumOutput, dependencies=[Depends(check_access_key)])
-async def read_json(
+async def get_exercises(
         limit: int = Query(1000, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         last_days: int = Query(0, ge=0),
@@ -147,7 +147,7 @@ async def get_exercise_history(
 
 
 @app.get("/")
-async def root(request: Request):
+async def get_auth_token(request: Request):
     """Return the current access token from cookies."""
     return request.cookies.get("access_token")
 
@@ -157,7 +157,7 @@ async def root(request: Request):
     response_model=RepsExerciseStats | DurationExerciseStats,
     dependencies=[Depends(check_access_key)],
 )
-async def get_exercise_stats_view(
+async def get_exercise_stats(
         exercise_name: str, service: ExerciseService = Depends(get_service)
 ):
     """Return aggregate statistics for a specific exercise."""
@@ -168,7 +168,7 @@ async def get_exercise_stats_view(
 
 
 @app.post("/api/set_auth_token/", response_model=StatusResponse)
-async def set_auth_token_view(password: Annotated[str, Form()]):
+async def set_auth_token(password: Annotated[str, Form()]):
     """Set an authentication token cookie."""
     from starlette.responses import JSONResponse
 
@@ -184,7 +184,7 @@ async def set_auth_token_view(password: Annotated[str, Form()]):
 
 
 @app.get("/login", response_class=HTMLResponse)
-async def login_form(request: Request):
+async def get_login_form(request: Request):
     """Render a simple login form."""
     return templates.TemplateResponse(request, "login.html")
 

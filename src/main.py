@@ -70,7 +70,16 @@ async def read_root(
         request: Request,
         service: ExerciseService = Depends(get_service),
 ):
-    """Render an HTML table of the latest exercises."""
+    """
+    This function retrieves a list of exercises and processes them to prepare data for display in a table format.
+
+    Dependencies
+    request : Request
+    service : ExerciseService
+
+    Returns
+    HTMLResponse
+    """
     result = service.fetch_exercises(limit=10000)
     exercise_names, rows = get_table_data(exercises=result)
     return templates.TemplateResponse(
@@ -89,7 +98,18 @@ async def add_reps_exercise_post(
         data: RepsExerciseInput,
         service: ExerciseService = Depends(get_service),
 ):
-    """Add a reps-based exercise entry."""
+    """
+    This function handles the creation of a new exercise repetition record.
+
+    Service is the dependency injected for interacting with the exercise service.
+
+    Parameters
+    data (RepsExerciseInput): Input data for the new repetition exercise, containing name and reps.
+    service (ExerciseService): The service instance used to perform the operation.
+
+    Returns
+    AddExerciseResponse: The response containing the added exercise information.
+    """
     request = AddRepsExercisesRequest(name=data.name, reps=data.reps)
     result = service.add_reps_exercise(request=request)
     return AddExerciseResponse(data=AddedRepsExerciseResponse(**result))

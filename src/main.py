@@ -36,7 +36,7 @@ from src.fetching_exercises import sum_exercises
 from src.get_table_data import get_table_data
 
 
-def get_service():
+def get_service() -> ExerciseService:
     exercises_source = SQLExerciseSource()
     return ExerciseService(exercise_source=exercises_source)
 

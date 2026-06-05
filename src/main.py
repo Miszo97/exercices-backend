@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from starlette import status
 from starlette.middleware.cors import CORSMiddleware
 
 from src.database_models import get_session
@@ -50,7 +51,7 @@ async def check_access_key(request: Request):
     hashed = hashlib.sha256(access_key.encode()).hexdigest() if access_key else ""
     if hashed == os.environ["ACCESS_KEY_HASH"]:
         return True
-    raise HTTPException(status_code=401, detail="Invalid access key")
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access key")
 
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
@@ -164,7 +165,7 @@ async def get_exercise_stats(
     """Return aggregate statistics for a specific exercise."""
     result = service.get_exercise_stats(name=exercise_name)
     if result is None:
-        raise HTTPException(status_code=404, detail="Exercise stats not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exercise stats not found")
     return result
 
 

@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from typing import Annotated
-import hashlib
+from src.utils import get_hash
 from dotenv import load_dotenv
 
 import pytz
@@ -48,7 +48,7 @@ async def check_access_key(request: Request):
     access_key = request.headers.get("Authorization")
     if not access_key:
         access_key = request.cookies.get("access_token")
-    hashed = hashlib.sha256(access_key.encode()).hexdigest() if access_key else ""
+    hashed = get_hash(access_key)
     if hashed == os.environ["ACCESS_KEY_HASH"]:
         return True
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access key")

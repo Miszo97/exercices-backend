@@ -169,7 +169,6 @@ async def get_exercise_stats(
 
 @app.post("/api/set_auth_token/", response_model=StatusResponse)
 async def set_auth_token(password: Annotated[str, Form()]):
-    """Set an authentication token cookie."""
     from starlette.responses import JSONResponse
 
     response = JSONResponse(content=StatusResponse().model_dump())
@@ -185,7 +184,6 @@ async def set_auth_token(password: Annotated[str, Form()]):
 
 @app.get("/login", response_class=HTMLResponse)
 async def get_login_form(request: Request):
-    """Render a simple login form."""
     return templates.TemplateResponse(request, "login.html")
 
 

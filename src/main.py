@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Annotated
 import hashlib
 from dotenv import load_dotenv
-load_dotenv()
 
 import pytz
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
@@ -40,6 +39,8 @@ def get_service():
     exercises_source = SQLExerciseSource()
     return ExerciseService(exercise_source=exercises_source)
 
+
+load_dotenv()
 
 
 async def check_access_key(request: Request):

@@ -46,13 +46,7 @@ To start with Docker Compose:
 ```bash
 docker compose up --build
 ```
-
-For local development:
-
-```bash
-docker compose -f docker-compose-dev.yml up --build
-```
-
+1
 ## Running Tests
 
 ```bash

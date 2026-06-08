@@ -57,5 +57,7 @@ jobs:
         port: ${{ vars.VPS_PORT }}
         script: |
           cd ${{ vars.VPS_APP_DIR }}
-          docker compose pull
-          docker compose up -d
+          FILE=docker-compose.yml
+          [ "${{ github.ref }}" = "refs/heads/dev" ] && FILE=docker-compose-dev.yml
+          docker compose -f "$FILE" pull
+          docker compose -f "$FILE" up -d

@@ -9,6 +9,7 @@ services:
       - "5433:5432"
 
   app-dev:
+    image: ghcr.io/miszo97/exercices-backend:dev
     build: .
     env_file:
       - compose.dev.env

@@ -53,6 +53,8 @@ FastAPI backend for tracking reps-based and duration-based exercise entries.
 
 ## Gotchas
 
+- Docker Desktop must be running before using any `docker compose` commands locally
+
 - `src/` is **not** an installed package — imports must use `from src.xxx import yyy`
 - `add_duration_exercise` / `add_reps_exercise` return plain `dict`s, not model instances
 - `fetch_exercises` sorts **ascending** by date; `fetch_exercises_by_name` sorts **descending**

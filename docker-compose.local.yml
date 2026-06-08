@@ -1,0 +1,21 @@
+services:
+  db-local:
+    image: postgres:18-alpine
+    env_file:
+      - compose.local.env
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  app-local:
+    build: .
+    env_file:
+      - compose.local.env
+    ports:
+      - "8070:8080"
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata_local:

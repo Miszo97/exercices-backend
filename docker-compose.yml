@@ -14,6 +14,7 @@ services:
       retries: 10
 
   app:
+    image: ghcr.io/miszo97/exercices-backend:latest
     build: .
     env_file:
       - compose.env

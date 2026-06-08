@@ -1,15 +1,15 @@
 import os
 from datetime import datetime
 from typing import Annotated
-import hashlib
+from src.utils import get_hash
 from dotenv import load_dotenv
-load_dotenv()
 
 import pytz
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from starlette import status
 from starlette.middleware.cors import CORSMiddleware
 
 from src.database_models import get_session
@@ -36,20 +36,22 @@ from src.fetching_exercises import sum_exercises
 from src.get_table_data import get_table_data
 
 
-def get_service():
+def get_service() -> ExerciseService:
     exercises_source = SQLExerciseSource()
     return ExerciseService(exercise_source=exercises_source)
 
+
+load_dotenv()
 
 
 async def check_access_key(request: Request):
     access_key = request.headers.get("Authorization")
     if not access_key:
         access_key = request.cookies.get("access_token")
-    hashed = hashlib.sha256(access_key.encode()).hexdigest() if access_key else ""
+    hashed = get_hash(access_key)
     if hashed == os.environ["ACCESS_KEY_HASH"]:
         return True
-    raise HTTPException(status_code=401, detail="Invalid access key")
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access key")
 
 app = FastAPI()
 templates = Jinja2Templates(directory="src/templates")
@@ -66,7 +68,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @app.get("/table", response_class=HTMLResponse, dependencies=[Depends(check_access_key)])
-async def read_root(
+async def get_table(
         request: Request,
         service: ExerciseService = Depends(get_service),
 ):
@@ -94,7 +96,7 @@ async def read_root(
     response_model=AddExerciseResponse,
     dependencies=[Depends(check_access_key)],
 )
-async def add_reps_exercise_post(
+async def create_reps_exercise(
         data: RepsExerciseInput,
         service: ExerciseService = Depends(get_service),
 ):
@@ -120,7 +122,7 @@ async def add_reps_exercise_post(
     response_model=AddExerciseResponse,
     dependencies=[Depends(check_access_key)],
 )
-async def add_duration_exercise_post(
+async def create_duration_exercise(
         data: DurationExerciseInput,
         service: ExerciseService = Depends(get_service),
 ):
@@ -131,7 +133,7 @@ async def add_duration_exercise_post(
 
 
 @app.get("/today", response_model=TodaySummaryResponse, dependencies=[Depends(check_access_key)])
-async def read_today_json(
+async def get_today_summary(
         service: ExerciseService = Depends(get_service),
 ):
     """Return today's exercise totals grouped by exercise name."""
@@ -141,7 +143,7 @@ async def read_today_json(
 
 
 @app.get("/exercises", response_model=ExercisesDaySumOutput, dependencies=[Depends(check_access_key)])
-async def read_json(
+async def get_exercises(
         limit: int = Query(1000, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         last_days: int = Query(0, ge=0),
@@ -167,7 +169,7 @@ async def get_exercise_history(
 
 
 @app.get("/")
-async def root(request: Request):
+async def get_auth_token(request: Request):
     """Return the current access token from cookies."""
     return request.cookies.get("access_token")
 
@@ -177,19 +179,18 @@ async def root(request: Request):
     response_model=RepsExerciseStats | DurationExerciseStats,
     dependencies=[Depends(check_access_key)],
 )
-async def get_exercise_stats_view(
+async def get_exercise_stats(
         exercise_name: str, service: ExerciseService = Depends(get_service)
 ):
     """Return aggregate statistics for a specific exercise."""
     result = service.get_exercise_stats(name=exercise_name)
     if result is None:
-        raise HTTPException(status_code=404, detail="Exercise stats not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exercise stats not found")
     return result
 
 
 @app.post("/api/set_auth_token/", response_model=StatusResponse)
-async def set_auth_token_view(password: Annotated[str, Form()]):
-    """Set an authentication token cookie."""
+async def set_auth_token(password: Annotated[str, Form()]):
     from starlette.responses import JSONResponse
 
     response = JSONResponse(content=StatusResponse().model_dump())
@@ -204,8 +205,7 @@ async def set_auth_token_view(password: Annotated[str, Form()]):
 
 
 @app.get("/login", response_class=HTMLResponse)
-async def login_form(request: Request):
-    """Render a simple login form."""
+async def get_login_form(request: Request):
     return templates.TemplateResponse(request, "login.html")
 
 

@@ -47,8 +47,6 @@ def get_engine():
         # For SQLite, especially in-memory DBs, disable same-thread check for multithreaded use
         connect_args.setdefault("check_same_thread", False)
 
-    # Use a StaticPool for in-memory SQLite so the same connection (and thus the same in-memory DB)
-    # is reused across the application/tests.
     if database_url.startswith("sqlite") and (
         ":memory:" in database_url or database_url.rstrip("/").endswith("sqlite://")
     ):

@@ -31,7 +31,7 @@ def test_read_today_json__integration(session):
     session.commit()
     app.dependency_overrides[SQLExerciseSource] = lambda: source
 
-    response = client.get("/today")
+    response = client.get("/api/v1/summary")
     assert response.status_code == 200
     assert response.json() == {
         "exercises": {

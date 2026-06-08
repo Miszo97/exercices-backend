@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
+from typing import Annotated, Literal, Union
 
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 
 
 class ExerciseType(Enum):
@@ -50,6 +51,26 @@ class RepsExerciseInput(BaseModel):
 class DurationExerciseInput(BaseModel):
     name: str
     duration: int
+
+
+class CreateRepsExercise(BaseModel):
+    type: Literal["reps"]
+    name: str
+    reps: int
+
+
+class CreateDurationExercise(BaseModel):
+    type: Literal["duration"]
+    name: str
+    duration: int
+
+
+# Discriminated body for `POST /api/v1/exercises`. The `type` field routes to the
+# matching variant, unifying the former `/reps` and `/duration` endpoints.
+CreateExerciseInput = Annotated[
+    Union[CreateRepsExercise, CreateDurationExercise],
+    Field(discriminator="type"),
+]
 
 
 class ExercisesDaySumOutput(BaseModel):

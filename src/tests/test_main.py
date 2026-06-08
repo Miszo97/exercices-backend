@@ -5,7 +5,8 @@ client = TestClient(app)
 
 
 def test_set_auth_token_view():
-    payload = {"username": "testuser", "password": "secret"}
-    response = client.post("/set-auth-token", json=payload)
+    response = client.post("/api/v1/auth/token", data={"password": "secret"})
 
     assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    assert "access_token" in response.cookies

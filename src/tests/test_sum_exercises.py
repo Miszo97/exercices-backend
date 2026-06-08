@@ -19,8 +19,8 @@ def test_sum_exercises():
         DurationExerciseEntry(name="Cycling", duration=45, date=today),
     ]
     summed = sum_exercises(exercises)
-    assert len(summed) == 3
-    assert summed == [
+    assert len(summed.exercises) == 3
+    assert summed.exercises == [
         RepsExerciseDaySum(name="Push-up", reps=25, date=today.date()),
         DurationExerciseDaySum(name="Running", duration=50, date=today.date()),
         DurationExerciseDaySum(name="Cycling", duration=45, date=today.date()),

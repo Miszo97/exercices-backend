@@ -151,15 +151,25 @@ DB_URI=postgresql+psycopg://postgres:postgres@db:5432/exercises
 
 ## API Reference
 
-All endpoints except `/login`, `/api/set_auth_token/`, and `/` require authentication (see [Authentication](#authentication)).
+The JSON API lives under `/api/v1`. Server-rendered pages (`/login`, `/table`) and
+`/health` live at the root. Everything under `/api/v1/exercises` and `/table`
+requires authentication (see [Authentication](#authentication)); the `/api/v1/auth/*`
+endpoints, `/login`, and `/health` do not.
 
-### POST `/reps`
+### POST `/api/v1/exercises`
 
-Add a reps-based exercise entry.
+Create an exercise entry. The `type` field discriminates between reps- and
+duration-based exercises (this replaces the old separate `/reps` and `/duration`
+endpoints).
 
-**Request body:**
+**Request body (reps):**
 ```json
-{ "name": "pushups", "reps": 20 }
+{ "type": "reps", "name": "pushups", "reps": 20 }
+```
+
+**Request body (duration):**
+```json
+{ "type": "duration", "name": "plank", "duration": 60 }
 ```
 
 **Response:**
@@ -172,28 +182,11 @@ Add a reps-based exercise entry.
 
 ---
 
-### POST `/duration`
+### GET `/api/v1/summary`
 
-Add a duration-based exercise entry.
+Return totals grouped by exercise name for a given day.
 
-**Request body:**
-```json
-{ "name": "plank", "duration": 60 }
-```
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "data": { "id": 1, "date": "2025-10-26T10:00:00", "name": "plank", "duration": 60, "type": "duration" }
-}
-```
-
----
-
-### GET `/today`
-
-Return today's totals grouped by exercise name (Europe/Warsaw timezone).
+**Query params:** `date` — an ISO date (`YYYY-MM-DD`) or `"today"` (default). `"today"` uses the Europe/Warsaw timezone.
 
 **Response:**
 ```json
@@ -202,7 +195,7 @@ Return today's totals grouped by exercise name (Europe/Warsaw timezone).
 
 ---
 
-### GET `/exercises`
+### GET `/api/v1/exercises`
 
 Return all exercises aggregated by day (one entry per exercise per day).
 
@@ -226,7 +219,7 @@ Return all exercises aggregated by day (one entry per exercise per day).
 
 ---
 
-### GET `/exercises/{exercise_name}`
+### GET `/api/v1/exercises/{exercise_name}`
 
 Return day-summed history for a specific exercise, sorted descending by date.
 
@@ -241,7 +234,7 @@ Return day-summed history for a specific exercise, sorted descending by date.
 
 ---
 
-### GET `/exercises/{exercise_name}/stats`
+### GET `/api/v1/exercises/{exercise_name}/stats`
 
 Return aggregate stats for a specific exercise.
 
@@ -271,7 +264,13 @@ HTML response — renders the `login.html` form.
 
 ---
 
-### POST `/api/set_auth_token/`
+### GET `/health`
+
+Liveness probe. Returns `{ "status": "ok" }`. Unauthenticated.
+
+---
+
+### POST `/api/v1/auth/token`
 
 Accepts a `password` form field. Sets an `access_token` cookie (httponly, secure, samesite=lax).
 
@@ -281,25 +280,28 @@ Accepts a `password` form field. Sets an `access_token` cookie (httponly, secure
 
 ---
 
-### GET `/`
+### GET `/api/v1/auth/session`
 
 Returns the current `access_token` cookie value (or `null`). Unauthenticated.
+
+**Response:** `{ "access_token": "your-secret-key" }`
 
 ---
 
 ## Authentication
 
-Every protected endpoint checks for an access key via `check_access_key` (a FastAPI `Depends`):
+Every protected endpoint checks for an access key via `check_access_key` (a FastAPI `Depends`).
+It is applied once at the router level for all `/api/v1/exercises*` routes, plus directly on `/table`:
 
 1. Reads `Authorization` header, or falls back to `access_token` cookie.
 2. SHA-256 hashes the value.
 3. Compares against `ACCESS_KEY_HASH` env var.
 4. Returns `401 Unauthorized` on mismatch.
 
-The `/api/set_auth_token/` endpoint is the browser-friendly way to set the cookie. CLI usage:
+The `/api/v1/auth/token` endpoint is the browser-friendly way to set the cookie. CLI usage:
 
 ```bash
-curl -H "Authorization: your-secret-key" http://localhost:8080/today
+curl -H "Authorization: your-secret-key" http://localhost:8080/api/v1/summary
 ```
 
 ---
@@ -427,7 +429,7 @@ docker run --env-file compose.env -p 8080:8080 exercises-backend
 
 - **`add_reps_exercise` / `add_duration_exercise` return plain `dict`s**, not model instances. Routes unpack them with `**result` into the response model constructors.
 
-- **Sort order differs by endpoint.** `fetch_exercises` (used by `GET /exercises`) sorts ascending by date. `fetch_exercises_by_name` (used by `GET /exercises/{name}`) sorts descending.
+- **Sort order differs by endpoint.** `fetch_exercises` (used by `GET /api/v1/exercises`) sorts ascending by date. `fetch_exercises_by_name` (used by `GET /api/v1/exercises/{name}`) sorts descending.
 
 - **`pyrightconfig.json` sets `pythonVersion: "3.12"`** even though the project requires `>=3.14`. Pyright may report false errors for 3.14-only features like `TypeGuard`/`TypeAlias` usage in `fetching_exercises.py`.
 

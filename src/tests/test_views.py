@@ -40,7 +40,7 @@ class TestGetToday:
             "plank": 80
         }
 
-        response = client.get("/today")
+        response = client.get("/api/v1/summary")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -55,7 +55,7 @@ class TestGetToday:
     def test_get_no_data(self, mock_service: MagicMock):
         mock_service.sum_exercises_for_day.return_value = {}
 
-        response = client.get("/today")
+        response = client.get("/api/v1/summary")
 
         assert response.status_code == 200
         assert response.json() == {
@@ -75,7 +75,10 @@ class TestCreateDurationEntry:
             "duration": 60
         }
 
-        response = client.post("/duration", json={"name": "plank", "duration": 60})
+        response = client.post(
+            "/api/v1/exercises",
+            json={"type": "duration", "name": "plank", "duration": 60},
+        )
 
         assert response.status_code == 200
         assert response.json() == {
@@ -91,7 +94,7 @@ class TestCreateDurationEntry:
         mock_service.add_duration_exercise.assert_called_once()
 
     def test_post_400(self, mock_service: MagicMock):
-        response = client.post("/duration", json={"nam": "plank", "dura": 60})
+        response = client.post("/api/v1/exercises", json={"type": "duration"})
         assert response.status_code == 422
         assert len(response.json()["detail"]) == 2
         assert response.json()["detail"][0]["type"] == "missing"
@@ -108,7 +111,10 @@ class TestCreateRepsEntry:
             "reps": 10
         }
 
-        response = client.post("/reps", json={"name": "push ups", "reps": 10})
+        response = client.post(
+            "/api/v1/exercises",
+            json={"type": "reps", "name": "push ups", "reps": 10},
+        )
 
         assert response.status_code == 200
         assert response.json() == {
@@ -124,7 +130,7 @@ class TestCreateRepsEntry:
         mock_service.add_reps_exercise.assert_called_once()
 
     def test_post_400(self, mock_service: MagicMock):
-        response = client.post("/reps", json={"nam": "push ups", "rep": 10})
+        response = client.post("/api/v1/exercises", json={"type": "reps"})
         assert response.status_code == 422
         assert len(response.json()["detail"]) == 2
         assert response.json()["detail"][0]["type"] == "missing"
@@ -137,7 +143,7 @@ def test_get_exercise_history(mock_service: MagicMock):
         ExerciseHistoryEntry(name="push ups", reps=10, date=now_str),
         ExerciseHistoryEntry(name="push ups", reps=15, date=now_str),
     ]
-    response = client.get("/exercises/push ups")
+    response = client.get("/api/v1/exercises/push ups")
     assert response.status_code == 200
     assert response.json() == [
         {
@@ -173,7 +179,7 @@ class TestGetExerciseStats:
             total_reps=150,
             reps_in_last_30_days=50
         )
-        response = client.get("/exercises/push ups/stats")
+        response = client.get("/api/v1/exercises/push ups/stats")
         assert response.status_code == 200
         assert response.json() == {
             "total_reps": 150,
@@ -186,7 +192,7 @@ class TestGetExerciseStats:
             total_duration=3600,
             duration_in_last_30_days=600
         )
-        response = client.get("/exercises/plank/stats")
+        response = client.get("/api/v1/exercises/plank/stats")
         assert response.status_code == 200
         assert response.json() == {
             "total_duration": 3600,
@@ -196,7 +202,7 @@ class TestGetExerciseStats:
 
     def test_stats_none(self, mock_service: MagicMock):
         mock_service.get_exercise_stats.return_value = None
-        response = client.get("/exercises/unknown/stats")
+        response = client.get("/api/v1/exercises/unknown/stats")
         assert response.status_code == 404
         assert response.json()["detail"] == "Exercise stats not found"
 
@@ -207,7 +213,7 @@ class TestGetExercises:
             DurationExerciseEntry(name="plank", duration=60, date=datetime.now()),
             RepsExerciseDaySum(name="push ups", reps=10, date=datetime.now()),
         ]
-        response = client.get("/exercises")
+        response = client.get("/api/v1/exercises")
         assert response.status_code == 200
         assert response.json() == {
             "exercises": [
@@ -222,32 +228,46 @@ class TestGetExercises:
 
 
 class Test401NotAuthenticated:
+    @pytest.fixture(autouse=True)
+    def require_real_auth(self, setup_dependency_overrides, monkeypatch):
+        # Undo the module-level check_access_key override so the real dependency runs,
+        # and give it a hash that no empty/absent credential can match.
+        monkeypatch.setenv("ACCESS_KEY_HASH", "unmatchable")
+        app.dependency_overrides.pop(check_access_key, None)
+        yield
+
     def test_unauthenticated_table(self):
         response = client.get("/table")
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid access key"
 
-    def test_unauthenticated_today(self):
-        response = client.get("/today")
+    def test_unauthenticated_summary(self):
+        response = client.get("/api/v1/summary")
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid access key"
 
     def test_unauthenticated_exercises(self):
-        response = client.get("/exercises")
+        response = client.get("/api/v1/exercises")
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid access key"
 
     def test_unauthenticated_exercise_stats(self):
-        response = client.get("/exercises/plank/stats")
+        response = client.get("/api/v1/exercises/plank/stats")
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid access key"
 
     def test_unauthenticated_post_duration(self):
-        response = client.post("/duration", json={"name": "plank", "duration": 60})
+        response = client.post(
+            "/api/v1/exercises",
+            json={"type": "duration", "name": "plank", "duration": 60},
+        )
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid access key"
 
     def test_unauthenticated_post_reps(self):
-        response = client.post("/reps", json={"name": "push ups", "reps": 10})
+        response = client.post(
+            "/api/v1/exercises",
+            json={"type": "reps", "name": "push ups", "reps": 10},
+        )
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid access key"

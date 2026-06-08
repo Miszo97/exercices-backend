@@ -46,7 +46,6 @@ To start with Docker Compose:
 ```bash
 docker compose up --build
 ```
-1
 ## Running Tests
 
 ```bash

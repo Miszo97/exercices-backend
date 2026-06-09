@@ -1,0 +1,28 @@
+name: Docs Check
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/big-pickle
+          prompt: |
+            Review this pull request against DEVELOPER.md.
+            If the PR adds new endpoints, changes behavior,
+            or adds new files in src/, check whether
+            DEVELOPER.md has been updated to reflect the
+            changes. If not, request changes and list
+            what's missing.

@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 
-from dtos import ExerciseHistoryEntry, RepsExerciseStats, DurationExerciseStats
-from exercises_sources.sql import SQLExerciseSource
+from src.dtos import ExerciseHistoryEntry, RepsExerciseStats, DurationExerciseStats
+from src.exercises_sources.sql import SQLExerciseSource
 from src.main import app
 from src.dtos import (
     DurationExerciseEntry,

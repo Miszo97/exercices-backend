@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 
-from database_models import DurationExerciseEntry, RepsExerciseEntry
-from dtos import DurationExerciseStats, RepsExerciseStats
+from src.database_models import DurationExerciseEntry, RepsExerciseEntry
+from src.dtos import DurationExerciseStats, RepsExerciseStats
 from src.exercises_sources.dtos import (
     AddDurationExercisesRequest,
     AddRepsExercisesRequest,

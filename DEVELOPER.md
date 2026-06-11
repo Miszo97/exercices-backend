@@ -385,7 +385,7 @@ def session():
 
 ## CI/CD & Deployment
 
-### GitHub Actions (`.github/workflows/docker-image.yaml.yml`)
+### GitHub Actions (`.github/workflows/docker-deploy-image.yml`)
 
 Triggers on push and PRs targeting `master` or `dev`.
 

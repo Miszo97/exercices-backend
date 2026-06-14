@@ -59,7 +59,7 @@ async def create_exercise(
 @exercises_router.get("/exercises", response_model=ExercisesDaySumOutput)
 async def get_exercises(
         limit: int = Query(1000, ge=1, le=1000),
-        offset: int = Query(0, ge=0),
+        offset: int = Query(0, ge=0, le=100000),
         last_days: int = Query(0, ge=0),
         service: ExerciseService = Depends(get_service),
 ):
@@ -73,11 +73,18 @@ async def get_exercises(
 @exercises_router.get("/exercises/{exercise_name}", response_model=list[ExerciseHistoryEntry])
 async def get_exercise_history(
         exercise_name: str,
+        limit: int = Query(1000, ge=1, le=1000),
+        offset: int = Query(0, ge=0, le=100000),
         last_days: int = Query(0, ge=0),
         service: ExerciseService = Depends(get_service),
 ):
     """Return day-summed history for a specific exercise."""
-    return service.get_exercise_history(name=exercise_name, last_days=last_days or None)
+    return service.get_exercise_history(
+        name=exercise_name,
+        limit=limit,
+        offset=offset,
+        last_days=last_days or None,
+    )
 
 
 @exercises_router.get(

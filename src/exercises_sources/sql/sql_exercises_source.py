@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from typing import Dict, List
 
 import pytz
-from sqlalchemy import and_, func, select
+from sqlalchemy import Integer, and_, func, literal, select, union_all
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.database_models import (
@@ -42,6 +42,67 @@ class SQLExerciseSource(ExerciseSource):
     def _now_warsaw():
         cest = pytz.timezone("Europe/Warsaw")
         return datetime.now(cest)
+
+    @staticmethod
+    def _date_range(day: date = None, last_days: int = None):
+        start_dt = end_dt = None
+        if day:
+            day_date = (
+                day if isinstance(day, date) and not isinstance(day, datetime) else day.date()
+            )
+            start_dt = datetime.combine(day_date, datetime.min.time())
+            end_dt = datetime.combine(day_date + timedelta(days=1), datetime.min.time())
+        elif last_days is not None:
+            now = datetime.now()
+            start_dt = now - timedelta(days=last_days)
+            end_dt = now
+        return start_dt, end_dt
+
+    @staticmethod
+    def _exercise_union(start_dt=None, end_dt=None, name: str | None = None):
+        reps_stmt = select(
+            RepsExerciseModel.id.label("id"),
+            RepsExerciseModel.date.label("date"),
+            RepsExerciseModel.name.label("name"),
+            RepsExerciseModel.reps.label("reps"),
+            literal(None, type_=Integer).label("duration"),
+            literal("reps").label("type"),
+            literal(0).label("type_rank"),
+        )
+        dur_stmt = select(
+            DurationExerciseModel.id.label("id"),
+            DurationExerciseModel.date.label("date"),
+            DurationExerciseModel.name.label("name"),
+            literal(None, type_=Integer).label("reps"),
+            DurationExerciseModel.duration.label("duration"),
+            literal("duration").label("type"),
+            literal(1).label("type_rank"),
+        )
+
+        if name is not None:
+            reps_stmt = reps_stmt.where(RepsExerciseModel.name == name)
+            dur_stmt = dur_stmt.where(DurationExerciseModel.name == name)
+
+        if start_dt is not None and end_dt is not None:
+            reps_stmt = reps_stmt.where(
+                and_(RepsExerciseModel.date >= start_dt, RepsExerciseModel.date < end_dt)
+            )
+            dur_stmt = dur_stmt.where(
+                and_(
+                    DurationExerciseModel.date >= start_dt,
+                    DurationExerciseModel.date < end_dt,
+                )
+            )
+
+        return union_all(reps_stmt, dur_stmt).subquery()
+
+    @staticmethod
+    def _to_exercise_entry(row) -> ExerciseEntryAbstract:
+        if row.type == "reps":
+            return RepsExerciseEntry(date=row.date, name=row.name, reps=row.reps)
+        return DurationExerciseEntry(
+            date=row.date, name=row.name, duration=row.duration
+        )
 
     def _session(self) -> Session:
         return self._SessionLocal()
@@ -106,62 +167,20 @@ class SQLExerciseSource(ExerciseSource):
         self, day: date = None, limit=None, offset=None, last_days: int = None
     ) -> List[ExerciseEntryAbstract]:
         with self._session() as session:
-            # Build filters
-            start_dt = end_dt = None
-            if day:
-                day_date = (
-                    day
-                    if isinstance(day, date) and not isinstance(day, datetime)
-                    else day.date()
-                )
-                start_dt = datetime.combine(day_date, datetime.min.time())
-                end_dt = datetime.combine(
-                    day_date + timedelta(days=1), datetime.min.time()
-                )
-            elif last_days is not None:
-                now = datetime.now()
-                start_dt = now - timedelta(days=last_days)
-                end_dt = now
+            start_dt, end_dt = self._date_range(day=day, last_days=last_days)
+            exercises_union = self._exercise_union(start_dt=start_dt, end_dt=end_dt)
 
-            reps_stmt = select(RepsExerciseModel)
-            dur_stmt = select(DurationExerciseModel)
-            if start_dt is not None and end_dt is not None:
-                reps_stmt = reps_stmt.where(
-                    and_(
-                        RepsExerciseModel.date >= start_dt,
-                        RepsExerciseModel.date < end_dt,
-                    )
-                )
-                dur_stmt = dur_stmt.where(
-                    and_(
-                        DurationExerciseModel.date >= start_dt,
-                        DurationExerciseModel.date < end_dt,
-                    )
-                )
-
-            reps_rows = session.execute(reps_stmt).scalars().all()
-            dur_rows = session.execute(dur_stmt).scalars().all()
-
-            exercises: List[ExerciseEntryAbstract] = []
-            for r in reps_rows:
-                exercises.append(
-                    RepsExerciseEntry(date=r.date, name=r.name, reps=r.reps)
-                )
-            for d in dur_rows:
-                exercises.append(
-                    DurationExerciseEntry(
-                        date=d.date, name=d.name, duration=d.duration
-                    )
-                )
-
-            exercises.sort(key=lambda x: x.date)
-
+            stmt = select(exercises_union).order_by(
+                exercises_union.c.date.asc(),
+                exercises_union.c.type_rank.asc(),
+                exercises_union.c.id.asc(),
+            )
             if offset is not None:
-                exercises = exercises[offset:]
+                stmt = stmt.offset(offset)
             if limit is not None:
-                exercises = exercises[:limit]
+                stmt = stmt.limit(limit)
 
-            return exercises
+            return [self._to_exercise_entry(row) for row in session.execute(stmt)]
 
     def fetch_exercises_by_name(
         self,
@@ -172,64 +191,22 @@ class SQLExerciseSource(ExerciseSource):
         last_days: int | None = None,
     ) -> List[ExerciseEntryAbstract]:
         with self._session() as session:
-            start_dt = end_dt = None
-            if day:
-                day_date = (
-                    day
-                    if isinstance(day, date) and not isinstance(day, datetime)
-                    else day.date()
-                )
-                start_dt = datetime.combine(day_date, datetime.min.time())
-                end_dt = datetime.combine(
-                    day_date + timedelta(days=1), datetime.min.time()
-                )
-            elif last_days is not None:
-                now = datetime.now()
-                start_dt = now - timedelta(days=last_days)
-                end_dt = now
-
-            reps_stmt = select(RepsExerciseModel).where(RepsExerciseModel.name == name)
-            dur_stmt = select(DurationExerciseModel).where(
-                DurationExerciseModel.name == name
+            start_dt, end_dt = self._date_range(day=day, last_days=last_days)
+            exercises_union = self._exercise_union(
+                start_dt=start_dt, end_dt=end_dt, name=name
             )
 
-            if start_dt is not None and end_dt is not None:
-                reps_stmt = reps_stmt.where(
-                    and_(
-                        RepsExerciseModel.date >= start_dt,
-                        RepsExerciseModel.date < end_dt,
-                    )
-                )
-                dur_stmt = dur_stmt.where(
-                    and_(
-                        DurationExerciseModel.date >= start_dt,
-                        DurationExerciseModel.date < end_dt,
-                    )
-                )
-
-            reps_rows = session.execute(reps_stmt).scalars().all()
-            dur_rows = session.execute(dur_stmt).scalars().all()
-
-            exercises: List[ExerciseEntryAbstract] = []
-            for r in reps_rows:
-                exercises.append(
-                    RepsExerciseEntry(date=r.date, name=r.name, reps=r.reps)
-                )
-            for d in dur_rows:
-                exercises.append(
-                    DurationExerciseEntry(
-                        date=d.date, name=d.name, duration=d.duration
-                    )
-                )
-
-            exercises.sort(key=lambda x: x.date, reverse=True)
-
+            stmt = select(exercises_union).order_by(
+                exercises_union.c.date.desc(),
+                exercises_union.c.type_rank.asc(),
+                exercises_union.c.id.asc(),
+            )
             if offset is not None:
-                exercises = exercises[offset:]
+                stmt = stmt.offset(offset)
             if limit is not None:
-                exercises = exercises[:limit]
+                stmt = stmt.limit(limit)
 
-            return exercises
+            return [self._to_exercise_entry(row) for row in session.execute(stmt)]
 
     def get_exercise_stats(
         self, name: str

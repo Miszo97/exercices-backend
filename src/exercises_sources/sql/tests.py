@@ -55,6 +55,55 @@ def test_a(session):
     assert len(data) == 1
 
 
+def test_fetch_exercises_paginates_after_combined_date_order(session):
+    base_date = datetime(2026, 1, 1, 12, 0, 0)
+    session.add_all(
+        [
+            RepsExerciseEntry(date=base_date, name="pushup", reps=10),
+            DurationExerciseEntry(
+                date=base_date + timedelta(days=1), name="plank", duration=30
+            ),
+            RepsExerciseEntry(
+                date=base_date + timedelta(days=2), name="squat", reps=20
+            ),
+            DurationExerciseEntry(
+                date=base_date + timedelta(days=3), name="wall sit", duration=45
+            ),
+        ]
+    )
+    session.commit()
+
+    data = source.fetch_exercises(limit=2, offset=1)
+
+    assert [entry.name for entry in data] == ["plank", "squat"]
+
+
+def test_fetch_exercises_by_name_paginates_after_descending_date_order(session):
+    base_date = datetime(2026, 1, 1, 12, 0, 0)
+    session.add_all(
+        [
+            RepsExerciseEntry(date=base_date, name="burpee", reps=10),
+            DurationExerciseEntry(
+                date=base_date + timedelta(days=1), name="burpee", duration=30
+            ),
+            RepsExerciseEntry(
+                date=base_date + timedelta(days=2), name="burpee", reps=20
+            ),
+            DurationExerciseEntry(
+                date=base_date + timedelta(days=3), name="other", duration=45
+            ),
+        ]
+    )
+    session.commit()
+
+    data = source.fetch_exercises_by_name(name="burpee", limit=2, offset=1)
+
+    assert [entry.date for entry in data] == [
+        base_date + timedelta(days=1),
+        base_date,
+    ]
+
+
 def test_get_exercise_stats_duration(session):
     # Arrange: add multiple duration entries for the same exercise name
     source.add_duration_exercise(AddDurationExercisesRequest(name="plank", duration=30))

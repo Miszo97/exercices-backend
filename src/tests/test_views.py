@@ -159,6 +159,12 @@ def test_get_exercise_history(mock_service: MagicMock):
             "duration": None
         }
     ]
+    mock_service.get_exercise_history.assert_called_once_with(
+        name="push ups",
+        limit=1000,
+        offset=0,
+        last_days=None,
+    )
 
 
 def test_read_root_table_view_with_mock(mock_service: MagicMock):

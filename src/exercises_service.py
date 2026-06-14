@@ -49,10 +49,12 @@ class ExerciseService:
     def get_exercise_history(
             self,
             name: str,
+            limit: int | None = None,
+            offset: int | None = None,
             last_days: int | None = None,
     ) -> list[ExerciseHistoryEntry]:
         entries = self.exercise_source.fetch_exercises_by_name(
-            name=name, last_days=last_days
+            name=name, limit=limit, offset=offset, last_days=last_days
         )
         summed = sum_exercises(entries)
         return summed.model_dump()["exercises"]

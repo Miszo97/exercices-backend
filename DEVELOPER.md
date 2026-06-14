@@ -223,7 +223,13 @@ Return all exercises aggregated by day (one entry per exercise per day).
 
 Return day-summed history for a specific exercise, sorted descending by date.
 
-**Query params:** `last_days` (int, optional)
+**Query params:**
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `limit` | int | 1000 | Max raw entries to read before day aggregation (1-1000) |
+| `offset` | int | 0 | Skip N raw entries before day aggregation (0-100000) |
+| `last_days` | int | 0 | Restrict to last N days (0 = no filter) |
 
 **Response:**
 ```json

@@ -29,12 +29,19 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Generate image tag
+      id: image_tag
+      run: |
+        build_date="$(date -u +'%Y%m%d-%H%M')"
+        echo "value=${GITHUB_SHA}-${build_date}" >> "$GITHUB_OUTPUT"
+
     - name: Extract metadata (tags, labels) for Docker
       id: meta
       uses: docker/metadata-action@v5
       with:
         images: ghcr.io/${{ github.repository }}
         tags: |
+          type=raw,value=${{ steps.image_tag.outputs.value }}
           type=ref,event=branch
           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 

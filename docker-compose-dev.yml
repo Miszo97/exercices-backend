@@ -6,7 +6,7 @@ services:
     volumes:
       - pgdata_dev:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "${DEV_DB_PORT:-5433}:5432"
 
   app-dev:
     image: ghcr.io/miszo97/exercices-backend:dev
@@ -14,7 +14,7 @@ services:
     env_file:
       - compose.dev.env
     ports:
-      - "8090:8080"
+      - "${DEV_APP_PORT:-8090}:8080"
     volumes:
       - .:/app
 

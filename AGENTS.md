@@ -13,7 +13,7 @@ FastAPI backend for tracking reps-based and duration-based exercise entries.
 | Run SQL source tests | `uv run pytest src/exercises_sources/sql/tests.py` |
 | Docker (prod) | `docker compose up --build` |
 | Docker (dev) | `docker compose -f docker-compose-dev.yml up --build` |
-| Alembic (in Docker) | `docker compose exec app alembic upgrade head` |
+| Alembic (in Docker) | `docker compose exec app uv run alembic upgrade head` |
 
 ## Architecture
 

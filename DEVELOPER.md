@@ -42,7 +42,7 @@ With Docker (PostgreSQL included):
 ```bash
 docker compose up --build
 # Apply migrations after first start
-docker compose exec app alembic upgrade head
+docker compose exec app uv run alembic upgrade head
 ```
 
 ---
@@ -329,13 +329,13 @@ Alembic reads `DB_URI` from the environment. The baseline migration creates both
 
 ```bash
 # Apply all migrations
-alembic upgrade head
+uv run alembic upgrade head
 
 # Create a new migration (after changing ORM models)
-alembic revision --autogenerate -m "describe change"
+uv run alembic revision --autogenerate -m "describe change"
 
 # In Docker
-docker compose exec app alembic upgrade head
+docker compose exec app uv run alembic upgrade head
 ```
 
 For local development against SQLite, the DB is in-memory by default — no migration is needed since `database_models.py` calls `Base.metadata.create_all()` on startup.
